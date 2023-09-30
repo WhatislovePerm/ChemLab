@@ -1,0 +1,43 @@
+﻿
+@model List<LabPracticeViewModel>
+@{
+    ViewData["Title"] = "Лабороторные опыты";
+}
+@if (User.Identity.IsAuthenticated)
+{
+    <div class="row">
+        <h1 class="display-4 col-sm-2">@ViewData["Title"]</h1>
+        <a class="col-sm-1 h4 offset-10" asp-controller="Home" asp-action="Create">Новый опыт</a>
+    </div>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Название</th>
+                        <th scope="col">Дата создания</th>
+                        <th scope="col">Описание </th>
+                        <th scope="col">&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var labPractice in Model)
+                    {
+                        <tr>
+                            <td>@labPractice.Name</td>
+                            <td>@labPractice.DateOfCreate</td>
+                            <td>@labPractice.Description</td>
+                            <td>
+                                <a>Детали</a> |
+                                <a>Редактировать</a> |
+                                <a>Удалить</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
