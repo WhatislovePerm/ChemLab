@@ -186,71 +186,80 @@
             var table = document.getElementById(tableId);
             //  убрать потом магические числа
             if (flagReactant) {
-                var row = table.rows[6];
+            var row = table.rows[6];
             } else {
-                var row = table.rows[5];
+            var row = table.rows[5];
             }
             for (var i = 1; i < row.cells.length; i++) {
-                var cell = row.cells[i];
-                var cellFragmentId = cell.innerHTML;
-                if (cellFragmentId === fragmentId) {
-                    var formulaCell = table.rows[0].cells[i];
-                    formulaCell.innerHTML = updatedData.formula;
+            var cell = row.cells[i];
+            var cellFragmentId = cell.innerHTML;
+            if (cellFragmentId === fragmentId) {
+                var formulaCell = table.rows[0].cells[i];
+                formulaCell.innerHTML = updatedData.formula;
 
-                    var mwCell = table.rows[1].cells[i];
-                    mwCell.innerHTML = updatedData.molarMass;
+                var mwCell = table.rows[1].cells[i];
+                mwCell.innerHTML = updatedData.molarMass;
 
-                    var mCell = table.rows[2].cells[i];
-                    var mInput = document.createElement("input");
-                    mInput.type = "text";
-                    mInput.className = "m-input";
-                    // console.log("m-input", updatedData.m);
-                    if (flagChangeMW) {
-                        console.log("flagChangeMW==true");
-                        if (updatedData.m !== "") {
-                            mInput.value = (updatedData.n * updatedData.molarMass / 1000).toFixed(2);
-                        }
-                    } else {
-                        console.log("flagChangeMW==false");
-                        mInput.value = formatNumber(updatedData.m);
-                    }
-
-                    mCell.innerHTML = ''; // Очищаем содержимое ячейки
-                    mCell.appendChild(mInput);
-                    mInput.addEventListener('input', function (e) {
-                        validateAndSetProperty(e.target, "m", updatedData);
-                        ProcessingOtherFieldsForM(e.target, updatedData, tableId, flagReactant);
-                    });
-
-                    var nCell = table.rows[3].cells[i];
-                    var nInput = document.createElement("input");
-                    nInput.type = "text";
-                    nInput.className = "n-input";
-                    nInput.value = formatNumber(updatedData.n);
-
-                    nCell.innerHTML = ''; // Очищаем содержимое ячейки
-                    nCell.appendChild(nInput);
-                    nInput.addEventListener('input', function (e) {
-                        validateAndSetProperty(e.target, "n", updatedData);
-                        ProcessingOtherFieldsForN(e.target, updatedData, tableId, flagReactant);
-                    });
-
-                    var eqvCell = table.rows[4].cells[i];
-                    var eqvInput = document.createElement("input");
-                    eqvInput.type = "text";
-                    eqvInput.className = "eqv-input";
-                    eqvInput.value = formatNumber(updatedData.equivalent);
-                    eqvCell.innerHTML = ''; // Очищаем содержимое ячейки
-                    eqvCell.appendChild(eqvInput);
-                    var oldValue = eqvInput.value;
-                    eqvInput.addEventListener('input', function (e) {
-                        // console.log("old val=",value);
-                        validateAndSetProperty(e.target, "equivalent", updatedData);
-                        ProcessingOtherFieldsForEqv(oldValue, updatedData, tableId, flagReactant);
-                    });
-
-                    break; // Выйти из цикла, как только ячейка будет обновлена
+                var mCell = table.rows[2].cells[i];
+                var mInput = document.createElement("input");
+                mInput.type = "text";
+                mInput.className = "m-input";
+                // console.log("m-input", updatedData.m);
+                if (flagChangeMW) {
+                console.log("flagChangeMW==true");
+                if (updatedData.m !== "") {
+                    mInput.value = (updatedData.n * updatedData.molarMass / 1000).toFixed(2);
                 }
+                } else {
+                console.log("flagChangeMW==false");
+                mInput.value = formatNumber(updatedData.m);
+                }
+                
+                mCell.innerHTML = ''; // Очищаем содержимое ячейки
+                mCell.appendChild(mInput);
+                mInput.addEventListener('input', function (e) {
+                if (validateAndSetProperty(e.target, "m", updatedData)) {
+                    ProcessingOtherFieldsForM(e.target, updatedData, tableId, flagReactant);
+                }
+                // validateAndSetProperty(e.target, "m", updatedData);
+                // ProcessingOtherFieldsForM(e.target, updatedData, tableId, flagReactant);
+                });
+
+                var nCell = table.rows[3].cells[i];
+                var nInput = document.createElement("input");
+                nInput.type = "text";
+                nInput.className = "n-input";
+                nInput.value = formatNumber(updatedData.n);
+
+                nCell.innerHTML = ''; // Очищаем содержимое ячейки
+                nCell.appendChild(nInput);
+                nInput.addEventListener('input', function (e) {
+                if (validateAndSetProperty(e.target, "n", updatedData)) {
+                    ProcessingOtherFieldsForN(e.target, updatedData, tableId, flagReactant);
+                }
+                // validateAndSetProperty(e.target, "n", updatedData);
+                // ProcessingOtherFieldsForN(e.target, updatedData, tableId, flagReactant);
+                });
+
+                var eqvCell = table.rows[4].cells[i];
+                var eqvInput = document.createElement("input");
+                eqvInput.type = "text";
+                eqvInput.className = "eqv-input";
+                eqvInput.value = formatNumber(updatedData.equivalent);
+                eqvCell.innerHTML = ''; // Очищаем содержимое ячейки
+                eqvCell.appendChild(eqvInput);
+                var oldValue = eqvInput.value;
+                eqvInput.addEventListener('input', function (e) {
+                // console.log("old val=",value);
+                if (validateAndSetProperty(e.target, "equivalent", updatedData)) {
+                    ProcessingOtherFieldsForEqv(oldValue, updatedData, tableId, flagReactant);
+                }
+                // validateAndSetProperty(e.target, "equivalent", updatedData);
+                // ProcessingOtherFieldsForEqv(oldValue, updatedData, tableId, flagReactant);
+                });
+
+                break; // Выйти из цикла, как только ячейка будет обновлена
+            }
             }
         }
 
@@ -264,12 +273,12 @@
             var eqvRow = table.rows[4];
 
             if (flagReactant) {
-                var actionRow = table.rows[5];
-                var uniqeRow = table.rows[6];
+            var actionRow = table.rows[5];
+            var uniqeRow = table.rows[6];
             } else {
-                var uniqeRow = table.rows[5];
+            var uniqeRow = table.rows[5];
             }
-
+            
 
             var formulaCell = formulaRow.insertCell(formulaRow.cells.length);
             formulaCell.innerHTML = fragmentInfo.formula;
@@ -284,8 +293,11 @@
             mInput.value = formatNumber(fragmentInfo.m);
             mCell.appendChild(mInput);
             mInput.addEventListener('input', function (e) {
-                validateAndSetProperty(e.target, "m", fragmentInfo);
+            if (validateAndSetProperty(e.target, "m", fragmentInfo)) {
                 ProcessingOtherFieldsForM(e.target, fragmentInfo, tableId, flagReactant);
+            }
+            // validateAndSetProperty(e.target, "m", fragmentInfo);
+            // ProcessingOtherFieldsForM(e.target, fragmentInfo, tableId, flagReactant);
             });
 
             var nCell = nRow.insertCell(nRow.cells.length);
@@ -295,8 +307,11 @@
             nInput.value = formatNumber(fragmentInfo.n);
             nCell.appendChild(nInput);
             nInput.addEventListener('input', function (e) {
-                validateAndSetProperty(e.target, "n", fragmentInfo);
+            if (validateAndSetProperty(e.target, "n", fragmentInfo)) {
                 ProcessingOtherFieldsForN(e.target, fragmentInfo, tableId, flagReactant);
+            }
+            // validateAndSetProperty(e.target, "n", fragmentInfo);
+            // ProcessingOtherFieldsForN(e.target, fragmentInfo, tableId, flagReactant);
             });
 
             var eqvCell = eqvRow.insertCell(eqvRow.cells.length);
@@ -307,36 +322,39 @@
             eqvCell.appendChild(eqvInput);
             var oldValue = eqvInput.value;
             eqvInput.addEventListener('input', function (e) {
-
-                // console.log("old val=",oldValue);
-                validateAndSetProperty(e.target, "equivalent", fragmentInfo);
+            
+            // console.log("old val=",oldValue);
+            // validateAndSetProperty(e.target, "equivalent", fragmentInfo);
+            if (validateAndSetProperty(e.target, "equivalent", fragmentInfo)) {
                 ProcessingOtherFieldsForEqv(oldValue, fragmentInfo, tableId, flagReactant);
+            }
+            // ProcessingOtherFieldsForEqv(oldValue, fragmentInfo, tableId, flagReactant);
             });
             if (flagReactant) {
 
-                var actionCell = actionRow.insertCell(actionRow.cells.length);
-                var radioInput = document.createElement("input");
-                radioInput.type = 'radio';
-                radioInput.name = 'action';
-                radioInput.className = 'action';
+            var actionCell = actionRow.insertCell(actionRow.cells.length);
+            var radioInput = document.createElement("input");
+            radioInput.type = 'radio';
+            radioInput.name = 'action';
+            radioInput.className = 'action';
 
-                if (fragmentInfo.action == 1) {
-                    radioInput.checked = true;
+            if (fragmentInfo.action == 1) {
+                radioInput.checked = true;
+            }
+
+            radioInput.addEventListener('change', function () {
+                fragmentInfo.action = 1;
+                resetAllActionsExcept(fragmentInfo.fragmentId);
+
+                for (var key in productData) {
+                let oldValue = productData[key].equivalent;
+                productData[key].equivalent = fragmentInfo.equivalent;
+                updateColumn(key, productData[key], "productTable", false, false);
+                ProcessingOtherFieldsForEqv(oldValue, productData[key], "productTable", false);
                 }
+            });
 
-                radioInput.addEventListener('change', function () {
-                    fragmentInfo.action = 1;
-                    resetAllActionsExcept(fragmentInfo.fragmentId);
-
-                    for (var key in productData) {
-                        let oldValue = productData[key].equivalent;
-                        productData[key].equivalent = fragmentInfo.equivalent;
-                        updateColumn(key, productData[key], "productTable", false, false);
-                        ProcessingOtherFieldsForEqv(oldValue, productData[key], "productTable", false);
-                    }
-                });
-
-                actionCell.appendChild(radioInput);
+            actionCell.appendChild(radioInput);
 
             }
 
@@ -373,9 +391,11 @@
             inputElement.value = value;
             console.log("eqv", fragmentInfo.fragmentId, fragmentInfo.equivalent);
             if (/^\d+(\.\d+)?$/.test(value)) {
-                inputElement.style.color = 'black';
+            inputElement.style.color = 'black';
+            return true;
             } else {
-                inputElement.style.color = 'red';
+            inputElement.style.color = 'red';
+            return false;
             }
         }
 
