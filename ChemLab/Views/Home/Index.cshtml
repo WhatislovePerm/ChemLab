@@ -365,12 +365,12 @@
         function resetAllActionsExcept(fragmentId) {
             var keys = Object.keys(reactantData);
             for (var i = 0; i < keys.length; i++) {
-                var elem = reactantData[keys[i]];
-
-                if (elem.fragmentId !== fragmentId) {
-                    elem.action = 0;
-                }
-                console.log(elem.fragmentId, elem.action);
+            var elem = reactantData[keys[i]];
+            
+            if (elem.fragmentId !== fragmentId) {
+                elem.action = 0;
+            }
+            console.log(elem.fragmentId, elem.action);
             }
         }
 
@@ -378,22 +378,25 @@
 
         function formatNumber(value) {
             if (/^\d+(\.\d+)?$/.test(value)) {
-                return parseFloat(value).toFixed(2);
+            return parseFloat(value).toFixed(2);
             } else {
-                return value;
+            return value;
             }
+        }
+
+        function isNumber(value) {
+            return /^\d+(\.\d+)?$/.test(value);
         }
 
         function validateAndSetProperty(inputElement, property, fragmentInfo) {
             var value = inputElement.value;
-            value = formatNumber(value);
-            fragmentInfo[property] = value;
             inputElement.value = value;
-            console.log("eqv", fragmentInfo.fragmentId, fragmentInfo.equivalent);
-            if (/^\d+(\.\d+)?$/.test(value)) {
-            inputElement.style.color = 'black';
+            if (isNumber(value)) {
+            fragmentInfo[property] = value;
+            console.log("valid true");
             return true;
             } else {
+            console.log("valid false");
             inputElement.style.color = 'red';
             return false;
             }
@@ -406,80 +409,80 @@
             updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
 
             if (!(flagReactant && fragmentInfo.action === 0)) {
-
-                for (var key in reactantData) {
-                    if (key !== fragmentInfo.fragmentId) {
-                        reactantData[key].m = (reactantData[key].molarMass / fragmentInfo.molarMass * fragmentInfo.m * reactantData[key].equivalent / fragmentInfo.equivalent).toFixed(2);
-                        reactantData[key].n = (reactantData[key].m / reactantData[key].molarMass * 1000).toFixed(2);
-                        updateColumn(key, reactantData[key], tableId, true, false);
-                    }
+            
+            for (var key in reactantData) {
+                if (key !== fragmentInfo.fragmentId) {
+                reactantData[key].m = (reactantData[key].molarMass / fragmentInfo.molarMass * fragmentInfo.m * reactantData[key].equivalent / fragmentInfo.equivalent).toFixed(2);
+                reactantData[key].n = (reactantData[key].m / reactantData[key].molarMass * 1000).toFixed(2);
+                updateColumn(key, reactantData[key], tableId, true, false);
                 }
-                for (var key in productData) {
-                    if (key !== fragmentInfo.fragmentId) {
-                        productData[key].m = (productData[key].molarMass / fragmentInfo.molarMass * fragmentInfo.m * productData[key].equivalent / fragmentInfo.equivalent).toFixed(2);
-                        productData[key].n = (productData[key].m / productData[key].molarMass * 1000).toFixed(2);
-                        updateColumn(key, productData[key], "productTable", false, false);
-                    }
+            }
+            for (var key in productData) {
+                if (key !== fragmentInfo.fragmentId) {
+                productData[key].m = (productData[key].molarMass / fragmentInfo.molarMass * fragmentInfo.m * productData[key].equivalent / fragmentInfo.equivalent).toFixed(2);
+                productData[key].n = (productData[key].m / productData[key].molarMass * 1000).toFixed(2);
+                updateColumn(key, productData[key], "productTable", false, false);
                 }
+            }
             }
 
         }
 
         function ProcessingOtherFieldsForN(inputElement, fragmentInfo, tableId, flagReactant) {
-
+            
             var nValue = inputElement.value;
-            var newMvalue = (nValue * fragmentInfo.molarMass).toFixed(2);
+            var newMvalue = (nValue * fragmentInfo.molarMass / 1000).toFixed(2);
             fragmentInfo.m = newMvalue;
             updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
 
             if (!(flagReactant && fragmentInfo.action === 0)) {
-
-                for (var key in reactantData) {
-                    if (key !== fragmentInfo.fragmentId) {
-                        reactantData[key].n = (reactantData[key].equivalent / fragmentInfo.equivalent * fragmentInfo.n).toFixed(2);
-                        reactantData[key].m = (reactantData[key].n * reactantData[key].molarMass).toFixed(2);
-                        updateColumn(key, reactantData[key], tableId, true, false);
-                    }
+            
+            for (var key in reactantData) {
+                if (key !== fragmentInfo.fragmentId) {
+                reactantData[key].n = (reactantData[key].equivalent / fragmentInfo.equivalent * fragmentInfo.n).toFixed(2);
+                reactantData[key].m = (reactantData[key].n * reactantData[key].molarMass / 1000).toFixed(2);
+                updateColumn(key, reactantData[key], tableId, true, false);
                 }
-                for (var key in productData) {
-                    if (key !== fragmentInfo.fragmentId) {
-                        productData[key].n = (productData[key].equivalent / fragmentInfo.equivalent * fragmentInfo.n).toFixed(2);
-                        productData[key].m = (productData[key].n * productData[key].molarMass).toFixed(2);
-                        updateColumn(key, productData[key], "productTable", false, false);
-                    }
+            }
+            for (var key in productData) {
+                if (key !== fragmentInfo.fragmentId) {
+                productData[key].n = (productData[key].equivalent / fragmentInfo.equivalent * fragmentInfo.n).toFixed(2);
+                productData[key].m = (productData[key].n * productData[key].molarMass / 1000).toFixed(2);
+                updateColumn(key, productData[key], "productTable", false, false);
                 }
-
             }
 
+            }
+            
         }
 
         function ProcessingOtherFieldsForEqv(oldValue, fragmentInfo, tableId, flagReactant) {
             // console.log("fragmentInfo.equivalent / oldValue = ", fragmentInfo.equivalent, "*", oldValue, "=", fragmentInfo.equivalent / oldValue);
-
+            
             if (flagReactant && fragmentInfo.action === 1) {
-                var multiplier = fragmentInfo.equivalent / oldValue;
-                updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
-                for (var key in reactantData) {
-                    if (key !== fragmentInfo.fragmentId) {
-                        console.log("multiplier", multiplier);
-                        reactantData[key].m /= multiplier;
-                        reactantData[key].n /= multiplier;
-                        updateColumn(key, reactantData[key], tableId, true, false);
-                    }
+            var multiplier =  fragmentInfo.equivalent / oldValue;
+            updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
+            for (var key in reactantData) {
+                if (key !== fragmentInfo.fragmentId) {
+                console.log("multiplier", multiplier);
+                reactantData[key].m /= multiplier;
+                reactantData[key].n /= multiplier;
+                updateColumn(key, reactantData[key], tableId, true, false);
                 }
-                for (var key in productData) {
-                    // if (key !== fragmentInfo.fragmentId) {
-                    console.log("multiplier", multiplier);
-                    productData[key].m /= multiplier;
-                    productData[key].n /= multiplier;
-                    updateColumn(key, productData[key], "productTable", false, false);
-                    // }
-                }
+            }
+            for (var key in productData) {
+                // if (key !== fragmentInfo.fragmentId) {
+                console.log("multiplier", multiplier);
+                productData[key].m /= multiplier;
+                productData[key].n /= multiplier;
+                updateColumn(key, productData[key], "productTable", false, false);
+                // }
+            }
             } else {
-                var multiplier = fragmentInfo.equivalent / oldValue;
-                fragmentInfo.m *= multiplier;
-                fragmentInfo.n *= multiplier;
-                updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
+            var multiplier =  fragmentInfo.equivalent / oldValue;
+            fragmentInfo.m *= multiplier;
+            fragmentInfo.n *= multiplier;
+            updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
             }
         }
 
