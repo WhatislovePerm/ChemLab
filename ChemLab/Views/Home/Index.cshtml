@@ -221,8 +221,6 @@
                 if (validateAndSetProperty(e.target, "m", updatedData)) {
                     ProcessingOtherFieldsForM(e.target, updatedData, tableId, flagReactant);
                 }
-                // validateAndSetProperty(e.target, "m", updatedData);
-                // ProcessingOtherFieldsForM(e.target, updatedData, tableId, flagReactant);
                 });
 
                 var nCell = table.rows[3].cells[i];
@@ -237,8 +235,6 @@
                 if (validateAndSetProperty(e.target, "n", updatedData)) {
                     ProcessingOtherFieldsForN(e.target, updatedData, tableId, flagReactant);
                 }
-                // validateAndSetProperty(e.target, "n", updatedData);
-                // ProcessingOtherFieldsForN(e.target, updatedData, tableId, flagReactant);
                 });
 
                 var eqvCell = table.rows[4].cells[i];
@@ -250,12 +246,9 @@
                 eqvCell.appendChild(eqvInput);
                 var oldValue = eqvInput.value;
                 eqvInput.addEventListener('input', function (e) {
-                // console.log("old val=",value);
                 if (validateAndSetProperty(e.target, "equivalent", updatedData)) {
                     ProcessingOtherFieldsForEqv(oldValue, updatedData, tableId, flagReactant);
                 }
-                // validateAndSetProperty(e.target, "equivalent", updatedData);
-                // ProcessingOtherFieldsForEqv(oldValue, updatedData, tableId, flagReactant);
                 });
 
                 break; // Выйти из цикла, как только ячейка будет обновлена
@@ -286,32 +279,45 @@
             var mwCell = mwRow.insertCell(mwRow.cells.length);
             mwCell.innerHTML = fragmentInfo.molarMass;
 
-            var mCell = mRow.insertCell(mRow.cells.length);
-            var mInput = document.createElement("input");
-            mInput.type = "text";
-            mInput.className = "m-input";
-            mInput.value = formatNumber(fragmentInfo.m);
-            mCell.appendChild(mInput);
-            mInput.addEventListener('input', function (e) {
-            if (validateAndSetProperty(e.target, "m", fragmentInfo)) {
-                ProcessingOtherFieldsForM(e.target, fragmentInfo, tableId, flagReactant);
+            let flagFullnes = false;
+            var resFullness = checkForFullness();
+            if (resFullness) {
+            var nValueBase = resFullness.n;
+            var eqvValueBase = resFullness.equivalent;
+            flagFullnes = true;
             }
-            // validateAndSetProperty(e.target, "m", fragmentInfo);
-            // ProcessingOtherFieldsForM(e.target, fragmentInfo, tableId, flagReactant);
-            });
 
             var nCell = nRow.insertCell(nRow.cells.length);
             var nInput = document.createElement("input");
             nInput.type = "text";
             nInput.className = "n-input";
+            if (flagFullnes) {
+            fragmentInfo.n = (nValueBase / eqvValueBase).toFixed(2);;
             nInput.value = formatNumber(fragmentInfo.n);
+            } else {
+            nInput.value = "";
+            }
             nCell.appendChild(nInput);
             nInput.addEventListener('input', function (e) {
             if (validateAndSetProperty(e.target, "n", fragmentInfo)) {
                 ProcessingOtherFieldsForN(e.target, fragmentInfo, tableId, flagReactant);
             }
-            // validateAndSetProperty(e.target, "n", fragmentInfo);
-            // ProcessingOtherFieldsForN(e.target, fragmentInfo, tableId, flagReactant);
+            });
+
+            var mCell = mRow.insertCell(mRow.cells.length);
+            var mInput = document.createElement("input");
+            mInput.type = "text";
+            mInput.className = "m-input";
+            if (flagFullnes) {
+            mInput.value = (fragmentInfo.n * fragmentInfo.molarMass / 1000).toFixed(2);
+            } else {
+            mInput.value = "";
+            }
+            mCell.appendChild(mInput);
+            mInput.addEventListener('input', function (e) {
+            if (validateAndSetProperty(e.target, "m", fragmentInfo)) {
+                ProcessingOtherFieldsForM(e.target, fragmentInfo, tableId, flagReactant);
+            }
             });
 
             var eqvCell = eqvRow.insertCell(eqvRow.cells.length);
@@ -322,13 +328,9 @@
             eqvCell.appendChild(eqvInput);
             var oldValue = eqvInput.value;
             eqvInput.addEventListener('input', function (e) {
-            
-            // console.log("old val=",oldValue);
-            // validateAndSetProperty(e.target, "equivalent", fragmentInfo);
             if (validateAndSetProperty(e.target, "equivalent", fragmentInfo)) {
                 ProcessingOtherFieldsForEqv(oldValue, fragmentInfo, tableId, flagReactant);
             }
-            // ProcessingOtherFieldsForEqv(oldValue, fragmentInfo, tableId, flagReactant);
             });
             if (flagReactant) {
 
@@ -361,6 +363,28 @@
             var uniqeCell = uniqeRow.insertCell(uniqeRow.cells.length);
             uniqeCell.innerHTML = fragmentInfo.fragmentId;
         }
+
+        function checkForFullness() {
+            var reactionElementWithAction = Object.values(reactantData).find(elem => elem.action === 1);
+            if (reactionElementWithAction && reactionElementWithAction.n !== "" && reactionElementWithAction.m !== "") {
+            // return reactionElementWithAction.n;
+            return {
+                n: reactionElementWithAction.n,
+                equivalent: reactionElementWithAction.equivalent
+                };
+            } else {
+            for (var key in productData) {
+                var productElement = productData[key];
+                if (productElement.n !== "" && productElement.m !== "") {
+                return {
+                n: productElement.n,
+                equivalent: productElement.equivalent
+                };
+                }
+            }
+            return null;
+            }
+        } 
 
         function resetAllActionsExcept(fragmentId) {
             var keys = Object.keys(reactantData);
