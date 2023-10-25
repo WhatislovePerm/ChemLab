@@ -208,7 +208,7 @@
                 if (flagChangeMW) {
                 console.log("flagChangeMW==true");
                 if (updatedData.m !== "") {
-                    mInput.value = (updatedData.n * updatedData.molarMass / 1000).toFixed(2);
+                    mInput.value = formatNumber(updatedData.n * updatedData.molarMass / 1000).toFixed(2);
                 }
                 } else {
                 console.log("flagChangeMW==false");
@@ -309,7 +309,8 @@
             mInput.type = "text";
             mInput.className = "m-input";
             if (flagFullnes) {
-            mInput.value = (fragmentInfo.n * fragmentInfo.molarMass / 1000).toFixed(2);
+            fragmentInfo.m = (fragmentInfo.n * fragmentInfo.molarMass / 1000).toFixed(2);
+            mInput.value = formatNumber(fragmentInfo.m);
             } else {
             mInput.value = "";
             }
