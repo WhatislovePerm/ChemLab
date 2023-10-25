@@ -208,7 +208,7 @@
                 if (flagChangeMW) {
                 console.log("flagChangeMW==true");
                 if (updatedData.m !== "") {
-                    mInput.value = formatNumber(updatedData.n * updatedData.molarMass / 1000).toFixed(2);
+                    mInput.value = (updatedData.n * updatedData.molarMass / 1000).toFixed(2);
                 }
                 } else {
                 console.log("flagChangeMW==false");
