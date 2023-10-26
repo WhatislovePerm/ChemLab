@@ -57,11 +57,22 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthorization();
 app.UseAuthentication();
+app.UseAuthorization();
 
 
 app.MapRazorPages();
+app.MapControllers();
+
+app.MapControllerRoute(
+    name: "chemeditorget",
+    pattern: "chemeditor/get_file/{id}",
+    defaults: new { controller = "ChemEditor", action = "GetFile", id = "333" });
+
+app.MapControllerRoute(
+    name: "chemeditor",
+    pattern: "chemeditor/save_data",
+    defaults: new { controller = "ChemEditor", action = "SaveChemData" });
 
 app.MapControllerRoute(
     name: "default",
