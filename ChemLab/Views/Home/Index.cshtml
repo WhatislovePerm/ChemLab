@@ -9,6 +9,9 @@
         <a class="col-sm-1 h4 offset-10" asp-controller="Home" asp-action="Create">Новый опыт</a>
     </div>
     <hr />
+    <div>
+        <input type="button" onclick="getfile()" value="btn" />
+    </div>
 
     <div class="row">
         <div class="col-md-12">
@@ -155,6 +158,57 @@
     <script src="lib/libs/raphael-min.2.0.1.js"></script>
     <script src="lib/libs/kekule/kekule.js?modules=io,chemWidget"></script>
     <script>
+
+        function parseServerData(data) {
+            let parsedData = JSON.parse(data);
+
+            let chemDocumentData = parsedData.ChemDocumentData; // строка
+
+            let dataReactant = {}; // объект
+            for (let i = 0; i < parsedData.ReactantData.length; i++) {
+                let fragment = parsedData.ReactantData[i];
+                dataReactant[fragment.fragmentId] = fragment;
+            }
+
+            let dataProduct = {}; // объект
+            for (let i = 0; i < parsedData.ProductData.length; i++) {
+                let fragment = parsedData.ProductData[i];
+                dataProduct[fragment.fragmentId] = fragment;
+            }
+
+            // Возвращаем объект с разобранными данными
+            return {
+                ChemDocumentData: chemDocumentData,
+                ReactantData: dataReactant,
+                ProductData: dataProduct
+            };
+        }
+
+        function getfile() {
+            $.ajax({
+                type: 'POST',
+                url: 'chemeditor/get_file/123',
+                data: '',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    let parsedData = parseServerData(data);
+                    displayData(parsedData);
+
+                },
+                error: function (xhr, status, error) {
+                    console.error('Произошла ошибка при отправке данных на сервер:', error);
+                }
+            });
+        }
+
+        function displayData(parsedData) {
+            console.log(parsedData.ChemDocumentData);
+            let composer = getComposer();
+            let data = Kekule.IO.loadFormatData(parsedData.ChemDocumentData, 'Kekule-JSON');
+            composer.setChemObj(data);
+        }
+
+
 
         function getViewerDialog() {
             console.log("1!");
@@ -589,17 +643,10 @@
             composer.getEditor().on('operUndo', handleOperationChangeOrUndo);
             composer.getEditor().on('operRedo', handleOperationChangeOrUndo);
 
-            // composer.getEditor().on('operChange', function (e) {
-
-
-            // });
-
             var newDocumentButton = document.querySelector('.K-Chem-NewDoc');
 
             newDocumentButton.addEventListener('click', removeAllColumnsExceptFirst);
-            // newDocumentButton.addEventListener('click', function () {
-            //   reactantData = {};
-            // });
+
         }
 
         function handleOperationChangeOrUndo(e) {
@@ -741,6 +788,7 @@
                     // flagToDelete = false;
                 }
             }
+            sendDataToServer();
         }
 
         function disp() {
@@ -751,7 +799,6 @@
                 console.log(elem.fragmentId, elem.action);
             }
         }
-
 
         function removeAllColumnsExceptFirst() {
             var composer = getComposer();
@@ -773,8 +820,76 @@
             productData = {};
         }
 
+        function sendDataToServer() {
+            let chemDocumentData = generateChemDocumentData();
+            let chemNumbersData = generateChemNumbersData();
 
+            dataReactant = chemNumbersData.reactantArray;
+            dataProduct = chemNumbersData.productArray;
 
+            let dataContainer = {
+                ChemDocumentData: chemDocumentData,
+                ReactantData: dataReactant,
+                ProductData: dataProduct
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: 'chemeditor/save_data',
+                data: JSON.stringify(dataContainer),
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    console.log('Данные успешно сохранены на сервере.');
+                },
+                error: function (xhr, status, error) {
+                    console.error('Произошла ошибка при отправке данных на сервер:', error);
+                }
+            });
+        }
+
+        function generateChemDocumentData() {
+            let ChemDocument = getComposer().exportObjs(Kekule.ChemDocument);
+            let data = "";
+            for (let i = 0, l = ChemDocument.length; i < l; ++i) {
+                let part = ChemDocument[i];
+                data += Kekule.IO.saveFormatData(part, 'Kekule-JSON');
+            }
+            console.log(data);
+            return data;
+        }
+
+        function generateChemNumbersData() {
+            let reactantArray = [];
+            let productArray = [];
+
+            for (let fragmentId in reactantData) {
+                let fragment = reactantData[fragmentId];
+                reactantArray.push({
+                    fragmentId: fragmentId,
+                    formula: fragment.formula,
+                    molarMass: fragment.molarMass,
+                    m: fragment.m,
+                    n: fragment.n,
+                    equivalent: fragment.equivalent,
+                    action: fragment.action
+                });
+            }
+
+            for (let fragmentId in productData) {
+                let fragment = productData[fragmentId];
+                productArray.push({
+                    fragmentId: fragmentId,
+                    formula: fragment.formula,
+                    molarMass: fragment.molarMass,
+                    m: fragment.m,
+                    n: fragment.n,
+                    equivalent: fragment.equivalent,
+                    action: fragment.action
+                });
+            }
+
+            return { reactantArray, productArray };
+        }
 
         Kekule.X.domReady(init);
 
