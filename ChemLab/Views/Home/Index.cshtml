@@ -414,22 +414,6 @@
                 radioInput.addEventListener('change', function () {
                 fragmentInfo.action = 1;
                 resetAllActionsExcept(fragmentInfo.fragmentId);
-
-                for (var key in reactantData) {
-                    if (key !== fragmentInfo.fragmentId) {
-                        reactantData[key].n = fragmentInfo.n;
-                        updateColumn(key, reactantData[key], "reactantTable", true, false);
-                        ProcessingOtherFieldsForN(reactantData[key].n, reactantData[key], "reactantTable", true);
-                    }
-                }
-
-                for (var key in productData) {
-                    if (productData[key].n == "" || productData[key].m == "") {
-                        productData[key].n = fragmentInfo.n;
-                        updateColumn(key, productData[key], "productTable", false, false);
-                        ProcessingOtherFieldsForN(productData[key].n, productData[key], "productTable", false);
-                    }
-                }
             });
 
                 actionCell.appendChild(radioInput);
