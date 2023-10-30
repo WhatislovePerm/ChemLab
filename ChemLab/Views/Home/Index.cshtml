@@ -675,15 +675,21 @@
             if (fragments.length == 0) {
                 removeAllColumnsExceptFirst();
             } else {
-                // var flagToDelete = true;
                 var observedFragmentIdsReactant = {};
                 var observedFragmentIdsProduct = {};
                 for (var i = 0; i < fragments.length; i++) {
                     var fragment = fragments[i];
                     var fragmentId = fragment.__$id;
 
-                    var node = fragment.getNodeAt(0);
-                    var xCoordinateAtom = node.__$coord2D.x;
+                    if (fragment && fragment.__$coord2D) {
+                        var node = fragment.getNodeAt(0);
+                        var xCoordinateAtom = fragment.__$coord2D.x;
+                        // console.log("X atom=", xCoordinateAtom);
+                    } else if (fragment && !fragment.__$coord2D) {
+                        var node = fragment.getNodeAt(0);
+                        var xCoordinateAtom = node.__$coord2D.x;
+                        // console.log("X atom=", xCoordinateAtom);
+                    }
 
                     var xCoordinateArrow = localStorage.getItem('xCoordinateArrow') || 0;
                     // console.log(fragmentId);
