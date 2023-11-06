@@ -877,6 +877,33 @@
             return { reactantArray, productArray };
         }
 
+        var ctrlPressed = false;
+
+        document.addEventListener('keydown', function(event) {
+            console.log("listen", event);
+            if (event.key === 'Control') {
+                ctrlPressed = true;
+            } else if (ctrlPressed && event.key === 'z') {
+                undo();
+            }
+        });
+
+        document.addEventListener('keyup', function(event) {
+            console.log("keyup");
+            if (event.key === 'Control') {
+                ctrlPressed = false;
+            }
+        });
+
+        function undo() {
+            var backButton = document.querySelector('.K-Chem-Undo');
+            if (backButton) {
+                // console.log("click");
+                backButton.click();
+                getComposer().undo();
+            }
+        }
+
         Kekule.X.domReady(init);
 
     </script>
