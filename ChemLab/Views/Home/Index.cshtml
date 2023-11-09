@@ -883,33 +883,77 @@
 
             return { reactantArray, productArray };
         }
-
+        /*
         var ctrlPressed = false;
 
-        document.addEventListener('keydown', function(event) {
-            console.log("listen", event);
+        document.addEventListener('keydown', function (event) {
+            //console.log("listen", event);
             if (event.key === 'Control') {
                 ctrlPressed = true;
             } else if (ctrlPressed && event.key === 'z') {
-                undo();
+                activateUndo();
+            } else if (ctrlPressed && event.key === '1') {
+                event.preventDefault();
+                handleBondType('Single');
+            } else if (ctrlPressed && event.key === '2') {
+                event.preventDefault();
+                handleBondType('Double');
+            } else if (ctrlPressed && event.key === '3') {
+                event.preventDefault();
+                handleBondType('Triple');
             }
         });
 
-        document.addEventListener('keyup', function(event) {
-            console.log("keyup");
+        // Обработчик отпускания клавиши Ctrl
+        document.addEventListener('keyup', function (event) {
+            //console.log("keyup");
             if (event.key === 'Control') {
                 ctrlPressed = false;
             }
         });
 
-        function undo() {
-            var backButton = document.querySelector('.K-Chem-Undo');
+        // Общая функция для обработки типа связи
+        function handleBondType(bondType) {
+            var bondTool = document.querySelector('.K-Chem-MolBondIaController');
+
+            if (bondTool) {
+                var mousedownEvent = new MouseEvent('mousedown', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+
+                var mouseupEvent = new MouseEvent('mouseup', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+
+                bondTool.dispatchEvent(mousedownEvent);
+                bondTool.dispatchEvent(mouseupEvent);
+
+                var bondButton = document.querySelector('.K-Chem-MolBondIaController-' + bondType);
+
+                if (bondButton) {
+                    bondButton.dispatchEvent(mousedownEvent);
+                    bondButton.dispatchEvent(mouseupEvent);
+
+                    bondButton.dispatchEvent(mousedownEvent);
+                }
+            }
+        }
+
+        // Функция для выполнения отмены действия
+        function activateUndo() {
+            var backButton = document.querySelector('.K-Chem-Undo'); // Найдите кнопку "назад" с помощью селектора
             if (backButton) {
                 console.log("click");
-                backButton.click();
+                backButton.click(); // Имитируем щелчок по кнопке "назад"
                 getComposer().undo();
             }
         }
+
+        */
 
         Kekule.X.domReady(init);
 
