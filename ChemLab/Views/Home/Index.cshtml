@@ -168,27 +168,7 @@
 
         function parseServerData(data) {
             let parsedData = JSON.parse(data);
-
-            let chemDocumentData = parsedData.ChemDocumentData; // строка
-
-            let dataReactant = {}; // объект
-            for (let i = 0; i < parsedData.ReactantData.length; i++) {
-                let fragment = parsedData.ReactantData[i];
-                dataReactant[fragment.fragmentId] = fragment;
-            }
-
-            let dataProduct = {}; // объект
-            for (let i = 0; i < parsedData.ProductData.length; i++) {
-                let fragment = parsedData.ProductData[i];
-                dataProduct[fragment.fragmentId] = fragment;
-            }
-
-            // Возвращаем объект с разобранными данными
-            return {
-                ChemDocumentData: chemDocumentData,
-                ReactantData: dataReactant,
-                ProductData: dataProduct
-            };
+            return parsedData;
         }
 
         function getfile() {
@@ -209,10 +189,37 @@
         }
 
         function displayData(parsedData) {
-            console.log(parsedData.ChemDocumentData);
             let composer = getComposer();
             let data = Kekule.IO.loadFormatData(parsedData.ChemDocumentData, 'Kekule-JSON');
             composer.setChemObj(data);
+
+            for (let fragment of parsedData.ReactantData) {
+                reactantData[fragment.FragmentId] = {
+                    fragment: fragment,
+                    fragmentId: fragment.FragmentId,
+                    formula: fragment.Formula,
+                    molarMass: fragment.MolarMass,
+                    m: fragment.M,
+                    n: fragment.N,
+                    equivalent: fragment.Equivalent,
+                    action: fragment.Action
+                };
+                updateColumn(fragment.FragmentId, reactantData[fragment.FragmentId], "reactantTable", true, false);
+            }
+
+            for (let fragment of parsedData.ProductData) {
+                productData[fragment.FragmentId] = {
+                    fragment: fragment,
+                    fragmentId: fragment.FragmentId,
+                    formula: fragment.Formula,
+                    molarMass: fragment.MolarMass,
+                    m: fragment.M,
+                    n: fragment.N,
+                    equivalent: fragment.Equivalent,
+                    action: fragment.Action
+                };
+                updateColumn(fragment.FragmentId, productData[fragment.FragmentId], "productTable", false, false);
+            }
         }
 
         function updateColumn(fragmentId, updatedData, tableId, flagReactant, flagChangeMW) {
@@ -559,7 +566,7 @@
         function init() {
             localStorage.removeItem('xCoordinateArrow');
             var composer = getComposer();
-            //composer.setPredefinedSetting('fullFunc');
+            getfile();
 
             composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
 
@@ -722,7 +729,7 @@
                 fragmentData[fragmentId].molarMass = molarMass;
                 updateColumn(fragmentId, fragmentData[fragmentId], tableId, flagReactant, true);  
             }
-            //sendDataToServer();
+            sendDataToServer();
         }
 
         function parseFormula(inputString) {
@@ -818,7 +825,7 @@
                 let part = ChemDocument[i];
                 data += Kekule.IO.saveFormatData(part, 'Kekule-JSON');
             }
-            console.log(data);
+            //console.log(data);
             return data;
         }
 
