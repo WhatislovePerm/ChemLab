@@ -730,13 +730,11 @@
                     if (flagReactant && Object.keys(fragmentData).length > 1 && fragmentData[fragmentId].action === 1) {
                         flagSetAction = true;
                     }
-                    // Удаляем fragmentData
                     console.log("delete", fragmentId);
                     delete fragmentData[fragmentId];
                 }
             }
             if (flagReactant && flagSetAction) {
-                // console.log("update selection");
                 var fragmentIds = Object.keys(fragmentData);
                 var firstFragmentId = fragmentIds[0];
                 fragmentData[firstFragmentId].action = 1;
@@ -746,11 +744,23 @@
         }
 
         function processFragment(fragmentData, fragments, fragment, fragmentId, tableId, flagReactant) {
+            var totalMass = 0;
+            for (var i = 0, l = fragment.getNodeCount(); i < l; ++i) {
+                var node = fragment.getNodeAt(i);
+                if (node.getAtomicMass) {
+                    totalMass += node.getAtomicMass();
+                }
+                if (node.getImplicitHydrogenCount) {
+                    var hcount = node.getImplicitHydrogenCount() || 0;
+                    totalMass += hcount * 1.01;
+                }
+            }
+            var molarMass = totalMass.toFixed(2)
+
             if (!fragmentData[fragmentId]) {
 
                 var formula = fragment.calcFormula();
-                var formulaText = formula.getText();
-                var molarMass = calculateMolecularMass(formulaText);
+                var formulaText = parseFormula(formula.getText());
 
                 fragmentData[fragmentId] = {
                     fragment: fragment,
@@ -767,30 +777,55 @@
                     fragmentData[fragmentId].action = 1;
                 }
                 createColumn(fragmentData[fragmentId], tableId, flagReactant);
-                // flagToDelete = false;
-            } else {
-                if (fragmentData[fragmentId].formula !== (fragment.calcFormula()).getText()) {
-                    console.log("update", fragmentId, flagReactant);
-                    var formula = fragment.calcFormula();
-                    var formulaText = formula.getText();
-                    var molarMass = calculateMolecularMass(formulaText);
+            } else if (fragmentData[fragmentId].formula !== parseFormula((fragment.calcFormula()).getText())) {
+                console.log("update", fragmentId, flagReactant);
+                var formula = fragment.calcFormula();
+                var formulaText = parseFormula(formula.getText());
 
-                    fragmentData[fragmentId].formula = formulaText;
-                    fragmentData[fragmentId].molarMass = molarMass;
-                    updateColumn(fragmentId, fragmentData[fragmentId], tableId, flagReactant, true);
-                    // flagToDelete = false;
-                }
+                fragmentData[fragmentId].formula = formulaText;
+                fragmentData[fragmentId].molarMass = molarMass;
+                updateColumn(fragmentId, fragmentData[fragmentId], tableId, flagReactant, true);  
             }
             //sendDataToServer();
         }
 
-        function disp() {
-            var keys = Object.keys(reactantData);
-            for (var i = 0; i < keys.length; i++) {
-                var elem = reactantData[keys[i]];
-
-                console.log(elem.fragmentId, elem.action);
+        function parseFormula(inputString) {
+            inputString = inputString.trim();
+            const match = inputString.match(/([+-])$/);
+            if (match) {
+                inputString = inputString.slice(0, -2);
             }
+            var result = "";
+            var sign = '';
+            var num = 1;
+            for (var i = 0; i < inputString.length; i++) {
+                if (inputString[i] !== ' ') {
+                    result += inputString[i];
+                } else {
+                    if (i + 1 < inputString.length) {
+                        if (!isNaN(inputString[i + 1])) {
+                            num = 0;
+                            while (i + 1 < inputString.length && !isNaN(inputString[i + 1])) {
+                                num = num * 10 + parseInt(inputString[i + 1]);
+                                i++;
+                            }
+                        }
+                        if (inputString[i + 1] === '+') {
+                            sign = '+';
+                            i++;
+                        } else if (inputString[i + 1] === '-') {
+                            sign = '-';
+                            i++;
+                        }
+                    }
+
+                }
+            }
+            if (sign) {
+                const chars = sign.repeat(num);
+                result += chars;
+            }
+            return result;
         }
 
         function removeAllColumnsExceptFirst() {
