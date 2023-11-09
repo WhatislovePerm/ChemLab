@@ -43,7 +43,7 @@
         </div>
     </div>
 
-    <link rel="stylesheet" type="text/css" href="lib/libs/kekule/themes/default/kekule.css" />
+    <link rel="stylesheet" type="text/css" href="lib/libs/dist/themes/default/kekule.css" />
     <style>
         p {
             margin: 0.3em 0.5em;
@@ -105,8 +105,15 @@
 
     </style>
 
-    <div id="stage">
+    <!-- <div id="stage">
         <div id="composer" data-widget="Kekule.Editor.Composer" data-chem-obj="" data-resizable="true"></div>
+        <div class="FloatClearer"></div>
+    </div>  -->
+
+    <div id="stage">
+        <div id="composer" data-widget="Kekule.Editor.Composer"
+             data-chem-obj="" data-resizable="true"></div>
+        <!-- <textarea class="Output" id="codeViewer" readonly="true" data-widget="Kekule.Widget.TextArea"></textarea> -->
         <div class="FloatClearer"></div>
     </div>
 
@@ -156,7 +163,7 @@
     </table>
 
     <script src="lib/libs/raphael-min.2.0.1.js"></script>
-    <script src="lib/libs/kekule/kekule.js?modules=io,chemWidget"></script>
+    <script src="lib/libs/dist/kekule.js?"></script>
     <script>
 
         function parseServerData(data) {
@@ -616,6 +623,7 @@
         function init() {
             localStorage.removeItem('xCoordinateArrow');
             var composer = getComposer();
+            //composer.setPredefinedSetting('fullFunc');
 
             composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
 
@@ -630,27 +638,28 @@
         }
 
         function handleOperationChangeOrUndo(e) {
+            
             var composer = getComposer();
             var chemObj = composer.getChemObj();
 
-            var arrows = composer.exportObjs(Kekule.Glyph.StraightLine);
+            //var arrows = composer.exportObjs(Kekule.Glyph.StraightLine);
+            
+            var arrows = composer.exportObjs(Kekule.Glyph.ReactionArrow);
             var xOffset = 1.2;
             if ((arrows.length > 0 && !localStorage.getItem('xCoordinateArrow')) ||
-                (arrows.length > 0 && arrows[0].__$coord2D.x + xOffset !== parseFloat(localStorage.getItem('xCoordinateArrow')))) {
-                // console.log("arrow");
-                var xCoordinateArrow = arrows[0].__$coord2D.x + xOffset;
+                (arrows.length > 0 && arrows[0].__$__k__p__coord2D.x + xOffset !== parseFloat(localStorage.getItem('xCoordinateArrow')))) {
+                var xCoordinateArrow = arrows[0].__$__k__p__coord2D.x + xOffset;
                 localStorage.setItem('xCoordinateArrow', xCoordinateArrow);
-                // console.log(xCoordinateArrow);
                 composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
             } else if (!(arrows.length > 0)) {
-                composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
-                localStorage.removeItem('xCoordinateArrow');
+                if (document.querySelector('.K-Chem-ArrowLineIaController') == null) {
+                    composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
+                    localStorage.removeItem('xCoordinateArrow');
+                }
             }
 
-
+            
             var fragments = Kekule.ChemStructureUtils.getAllStructFragments(chemObj, true);
-            // console.log(fragments);
-            // console.log(fragments.length);
 
             if (fragments.length == 0) {
                 removeAllColumnsExceptFirst();
@@ -659,15 +668,15 @@
                 var observedFragmentIdsProduct = {};
                 for (var i = 0; i < fragments.length; i++) {
                     var fragment = fragments[i];
-                    var fragmentId = fragment.__$id;
+                    var fragmentId = fragment.__$__k__p__id;
 
-                    if (fragment && fragment.__$coord2D) {
+                    if (fragment && fragment.__$__k__p__coord2D) {
                         var node = fragment.getNodeAt(0);
-                        var xCoordinateAtom = fragment.__$coord2D.x;
+                        var xCoordinateAtom = fragment.__$__k__p__coord2D.x;
                         // console.log("X atom=", xCoordinateAtom);
-                    } else if (fragment && !fragment.__$coord2D) {
+                    } else if (fragment && !fragment.__$__k__p__coord2D) {
                         var node = fragment.getNodeAt(0);
-                        var xCoordinateAtom = node.__$coord2D.x;
+                        var xCoordinateAtom = node.__$__k__p__coord2D.x;
                         // console.log("X atom=", xCoordinateAtom);
                     }
 
@@ -684,14 +693,12 @@
                     }
                 }
 
-                // if (flagToDelete && fragments.length > 0) {
 
                 deleteFragment(reactantData, "reactantTable", observedFragmentIdsReactant, flagReactant);
                 deleteFragment(productData, "productTable", observedFragmentIdsProduct, !flagReactant);
-                // }
             }
 
-
+           
         }
 
         function deleteFragment(fragmentData, tableId, observedFragmentIds, flagReactant) {
@@ -774,7 +781,7 @@
                     // flagToDelete = false;
                 }
             }
-            sendDataToServer();
+            //sendDataToServer();
         }
 
         function disp() {
@@ -898,7 +905,7 @@
         function undo() {
             var backButton = document.querySelector('.K-Chem-Undo');
             if (backButton) {
-                // console.log("click");
+                console.log("click");
                 backButton.click();
                 getComposer().undo();
             }
