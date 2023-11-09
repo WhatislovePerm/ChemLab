@@ -215,34 +215,6 @@
             composer.setChemObj(data);
         }
 
-
-
-        function getViewerDialog() {
-            console.log("1!");
-            var result = getViewerDialog._dialog;
-            if (!result) {
-                console.log("2!");
-                result = new Kekule.Widget.Dialog(document, 'View', [Kekule.Widget.DialogButtons.OK]);
-                result.setLocation(Kekule.Widget.Location.CENTER_OR_FULLFILL);
-                var viewer = new Kekule.ChemWidget.Viewer(document, null, Kekule.Render.RendererType.R2D);
-                viewer.addClassName('ChemViewer');
-                viewer.setResizable(true);
-                viewer.setPredefinedSetting('basic');
-                viewer.appendToWidget(result);
-                result._viewer = viewer;
-                getViewerDialog._dialog = result;
-            }
-            return result;
-        }
-
-        function exportToViewer() {
-            var dialog = getViewerDialog();
-            dialog.openPopup();
-            var viewer = dialog._viewer;
-            var chemObj = getComposer().getChemObj();
-            viewer.setChemObj(chemObj);
-        }
-
         function updateColumn(fragmentId, updatedData, tableId, flagReactant, flagChangeMW) {
             var table = document.getElementById(tableId);
             //  убрать потом магические числа
@@ -278,7 +250,7 @@
 
                     mCell.innerHTML = ''; // Очищаем содержимое ячейки
                     mCell.appendChild(mInput);
-                    mInput.addEventListener('input', function (e) {
+                    mInput.addEventListener('blur', function (e) {
                         if (validateAndSetProperty(e.target, "m", updatedData)) {
                             ProcessingOtherFieldsForM(e.target.value, updatedData, tableId, flagReactant);
                         } else {
@@ -294,7 +266,7 @@
 
                     nCell.innerHTML = ''; // Очищаем содержимое ячейки
                     nCell.appendChild(nInput);
-                    nInput.addEventListener('input', function (e) {
+                    nInput.addEventListener('blur', function (e) {
                         if (validateAndSetProperty(e.target, "n", updatedData)) {
                             ProcessingOtherFieldsForN(e.target.value, updatedData, tableId, flagReactant);
                         } else {
@@ -310,7 +282,7 @@
                     eqvCell.innerHTML = ''; // Очищаем содержимое ячейки
                     eqvCell.appendChild(eqvInput);
                     var oldValue = eqvInput.value;
-                    eqvInput.addEventListener('input', function (e) {
+                    eqvInput.addEventListener('blur', function (e) {
                         if (validateAndSetProperty(e.target, "equivalent", updatedData)) {
                             ProcessingOtherFieldsForEqv(oldValue, updatedData, tableId, flagReactant);
                         } else {
@@ -365,7 +337,7 @@
                 nInput.value = "";
             }
             nCell.appendChild(nInput);
-            nInput.addEventListener('input', function (e) {
+            nInput.addEventListener('blur', function (e) {
                 if (validateAndSetProperty(e.target, "n", fragmentInfo)) {
                     ProcessingOtherFieldsForN(e.target.value, fragmentInfo, tableId, flagReactant);
                 } else {
@@ -384,7 +356,7 @@
                 mInput.value = "";
             }
             mCell.appendChild(mInput);
-            mInput.addEventListener('input', function (e) {
+            mInput.addEventListener('blur', function (e) {
                 if (validateAndSetProperty(e.target, "m", fragmentInfo)) {
                     ProcessingOtherFieldsForM(e.target.value, fragmentInfo, tableId, flagReactant);
                 } else {
@@ -399,7 +371,7 @@
             eqvInput.value = formatNumber(fragmentInfo.equivalent);
             eqvCell.appendChild(eqvInput);
             var oldValue = eqvInput.value;
-            eqvInput.addEventListener('input', function (e) {
+            eqvInput.addEventListener('blur', function (e) {
                 if (validateAndSetProperty(e.target, "equivalent", fragmentInfo)) {
                     ProcessingOtherFieldsForEqv(oldValue, fragmentInfo, tableId, flagReactant);
                 } else {
@@ -577,44 +549,8 @@
             }
         }
 
-
         function getComposer() {
             return Kekule.Widget.getWidgetById('composer');
-        }
-
-
-        function calculateMolecularMass(formulaText) {
-            var molarMass = 0;
-            var currentElement = "";
-            var currentMultiplier = 1;
-
-            for (var i = 0; i < formulaText.length; i++) {
-                var char = formulaText[i];
-                if (isNaN(char)) {
-                    currentElement += char;
-                    if (i + 1 < formulaText.length && formulaText[i + 1] > 'a' && formulaText[i + 1] < 'z') {
-                        char = formulaText[i + 1];
-                        currentElement += char;
-                        i++;
-                    }
-                    var atomInfo = Kekule.ChemicalElementsDataUtil.getElementInfo(currentElement);
-                    if (atomInfo) {
-                        if (i + 1 < formulaText.length && !isNaN(formulaText[i + 1])) {
-                            currentMultiplier = parseInt(formulaText[i + 1]);
-                            i++;
-                            while (i + 1 < formulaText.length && !isNaN(formulaText[i + 1])) {
-                                currentMultiplier = currentMultiplier * 10 + parseInt(formulaText[i + 1]);
-                                i++;
-                            }
-                        }
-                        molarMass += atomInfo.naturalMass * currentMultiplier;
-                    }
-                    currentElement = "";
-                    currentMultiplier = 1;
-                }
-            }
-            molarMass = molarMass.toFixed(2);
-            return molarMass;;
         }
 
         var reactantData = {};
