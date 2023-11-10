@@ -102,7 +102,6 @@
         #productTable tr:last-child {
             display: none;
         }
-
     </style>
 
     <!-- <div id="stage">
@@ -294,6 +293,7 @@
                             ProcessingOtherFieldsForEqv(oldValue, updatedData, tableId, flagReactant);
                         } else {
                             updatedData.equivalent = 1.00;
+                            updateColumn(updatedData.fragmentId, updatedData, tableId, flagReactant, false);
                         }
                     });
 
@@ -397,10 +397,14 @@
                     radioInput.checked = true;
                 }
 
-            radioInput.addEventListener('change', function () {
-                fragmentInfo.action = 1;
-                resetAllActionsExcept(fragmentInfo.fragmentId);
-            });
+                radioInput.addEventListener('change', () => {
+                    fragmentInfo.action = 1;
+                    resetAllActionsExcept(fragmentInfo.fragmentId);
+                    if (fragmentInfo.n !== "" && fragmentInfo.m !== "") {
+                        updateEmptyFields(reactantData, fragmentInfo, "reactantTable", true);
+                        updateEmptyFields(productData, fragmentInfo, "productTable", false);
+                    }
+                });
 
                 actionCell.appendChild(radioInput);
 
@@ -408,6 +412,25 @@
 
             var uniqeCell = uniqeRow.insertCell(uniqeRow.cells.length);
             uniqeCell.innerHTML = fragmentInfo.fragmentId;
+        }
+
+        function updateEmptyFields(data, actvieFragment, tableId, flagReactant) {
+            for (var key in data) {
+                var element = data[key];
+                if (element.action === 0) {
+                    if (element.n === "" && element.m === "") {
+                        element.n = actvieFragment.n * element.equivalent / actvieFragment.equivalent;
+                        element.m = (element.n * element.molarMass / 1000).toFixed(2);
+                        updateColumn(key, element, tableId, flagReactant, false);
+                    } else if (element.n === "") {
+                        element.n = (element.m / element.molarMass * 1000).toFixed(2);
+                        updateColumn(key, element, tableId, flagReactant, false);
+                    } else if (element.m === "") {
+                        element.m = (element.n * element.molarMass / 1000).toFixed(2);
+                        updateColumn(key, element, tableId, flagReactant, false);
+                    }
+                }
+            }
         }
 
         function checkForFullness() {
@@ -581,12 +604,12 @@
         }
 
         function handleOperationChangeOrUndo(e) {
-            
+
             var composer = getComposer();
             var chemObj = composer.getChemObj();
 
             //var arrows = composer.exportObjs(Kekule.Glyph.StraightLine);
-            
+
             var arrows = composer.exportObjs(Kekule.Glyph.ReactionArrow);
             var xOffset = 1.2;
             if ((arrows.length > 0 && !localStorage.getItem('xCoordinateArrow')) ||
@@ -601,7 +624,7 @@
                 }
             }
 
-            
+
             var fragments = Kekule.ChemStructureUtils.getAllStructFragments(chemObj, true);
 
             if (fragments.length == 0) {
@@ -641,7 +664,7 @@
                 deleteFragment(productData, "productTable", observedFragmentIdsProduct, !flagReactant);
             }
 
-           
+
         }
 
         function deleteFragment(fragmentData, tableId, observedFragmentIds, flagReactant) {
@@ -727,7 +750,7 @@
 
                 fragmentData[fragmentId].formula = formulaText;
                 fragmentData[fragmentId].molarMass = molarMass;
-                updateColumn(fragmentId, fragmentData[fragmentId], tableId, flagReactant, true);  
+                updateColumn(fragmentId, fragmentData[fragmentId], tableId, flagReactant, true);
             }
             sendDataToServer();
         }
