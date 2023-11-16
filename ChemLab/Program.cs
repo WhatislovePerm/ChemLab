@@ -67,12 +67,13 @@ app.MapControllers();
 app.MapControllerRoute(
     name: "chemeditorget",
     pattern: "chemeditor/get_file/{id}",
-    defaults: new { controller = "ChemEditor", action = "GetFile", id = "333" });
+    defaults: new { controller = "ChemEditor", action = "GetFile" });
 
 app.MapControllerRoute(
     name: "chemeditor",
-    pattern: "chemeditor/save_data",
+    pattern: "chemeditor/save_data/{id}",
     defaults: new { controller = "ChemEditor", action = "SaveChemData" });
+
 
 app.MapControllerRoute(
     name: "default",

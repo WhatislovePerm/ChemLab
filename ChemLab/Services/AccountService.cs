@@ -52,8 +52,12 @@ namespace ChemLab.Services
             else
             {
                 var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-                var user = new ApplicationUser { UserName = email, Email = email, PictureUrl = info.Principal.FindFirstValue("picture") };
-
+                var user = new ApplicationUser
+                {
+                    UserName = email,
+                    Email = email,
+                    PictureUrl = info.Principal.FindFirstValue("picture") ?? "default-url.jpg"
+                };
                 var createUserResult = await _userManager.CreateAsync(user);
                 if (!createUserResult.Succeeded)
                 {

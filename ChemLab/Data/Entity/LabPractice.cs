@@ -1,11 +1,13 @@
 ﻿using System;
 using ChemLab.Models;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace ChemLab.Data.Entity
 {
     public class LabPractice
     {
-       
+
         public int Id { get; set; }
 
         public string Name { get; set; }
@@ -18,12 +20,22 @@ namespace ChemLab.Data.Entity
 
         public ApplicationUser? User { get; set; }
 
-        public LabPractice() { }
+        public string ChemDocumentData { get; set; }
+        public string ReactantData { get; set; }
+        public string ProductData { get; set; }
 
-        public LabPractice(CreateLabPracticeViewModel createLabPracticeViewModel ){
+        public LabPractice()
+        {
 
+        }
+
+        public LabPractice(CreateLabPracticeViewModel createLabPracticeViewModel)
+        {
             Description = createLabPracticeViewModel.Description;
             Name = createLabPracticeViewModel.Name;
+            ChemDocumentData = "";
+            ReactantData = "";
+            ProductData = "";
         }
 
 
