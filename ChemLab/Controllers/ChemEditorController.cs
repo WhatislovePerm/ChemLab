@@ -47,6 +47,12 @@ namespace ChemLab.Controllers
         {
             try
             {
+                // Проверить, что dataContainer не равен null
+                if (dataContainer == null)
+                {
+                    return BadRequest(new { error = "DataContainer is null." });
+                }
+
                 var labPractice = await _labPracticeRepository.GetById(id);
 
                 if (labPractice == null)
@@ -54,10 +60,21 @@ namespace ChemLab.Controllers
                     return NotFound();
                 }
 
-                labPractice.ChemDocumentData = JsonConvert.SerializeObject(dataContainer.ChemDocumentData);
-                labPractice.ReactantData = JsonConvert.SerializeObject(dataContainer.ReactantData);
-                labPractice.ProductData = JsonConvert.SerializeObject(dataContainer.ProductData);
+                // Теперь можно проверять свойства внутри dataContainer
+                if (dataContainer.ChemDocumentData != null)
+                {
+                    labPractice.ChemDocumentData = JsonConvert.SerializeObject(dataContainer.ChemDocumentData);
+                }
 
+                if (dataContainer.ReactantData != null)
+                {
+                    labPractice.ReactantData = JsonConvert.SerializeObject(dataContainer.ReactantData);
+                }
+
+                if (dataContainer.ProductData != null)
+                {
+                    labPractice.ProductData = JsonConvert.SerializeObject(dataContainer.ProductData);
+                }
 
                 await _labPracticeRepository.Update(labPractice);
 
@@ -68,6 +85,7 @@ namespace ChemLab.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
 
     }
 }

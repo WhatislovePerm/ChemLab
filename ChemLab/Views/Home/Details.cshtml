@@ -136,7 +136,7 @@
             url: '/chemeditor/get_file/' + id,
             contentType: 'application/json; charset=utf-8',
             success: function (data) {
-                console.log(data);
+                // console.log(data);
                 displayData(data);
             },
             error: function (xhr, status, error) {
@@ -206,12 +206,12 @@
                 mInput.className = "m-input";
                 // console.log("m-input", updatedData.m);
                 if (flagChangeMW) {
-                    console.log("flagChangeMW==true", fragmentId);
+                    // console.log("flagChangeMW==true", fragmentId);
                     if (updatedData.m !== "") {
                         mInput.value = (updatedData.n * updatedData.molarMass / 1000).toFixed(2);
                     }
                 } else {
-                    console.log("flagChangeMW==false", fragmentId);
+                    // console.log("flagChangeMW==false", fragmentId);
                     mInput.value = formatNumber(updatedData.m);
                 }
 
@@ -261,6 +261,7 @@
                 break; // Выйти из цикла, как только ячейка будет обновлена
             }
         }
+        sendDataToServer();
     }
 
     function createColumn(fragmentInfo, tableId, flagReactant) {
@@ -373,6 +374,8 @@
 
         var uniqeCell = uniqeRow.insertCell(uniqeRow.cells.length);
         uniqeCell.innerHTML = fragmentInfo.fragmentId;
+
+        sendDataToServer();
     }
 
     function updateEmptyFields(data, actvieFragment, tableId, flagReactant) {
@@ -392,6 +395,7 @@
                 }
             }
         }
+        sendDataToServer();
     }
 
     function checkForFullness() {
@@ -414,6 +418,7 @@
             }
             return null;
         }
+        sendDataToServer();
     }
 
     function resetAllActionsExcept(fragmentId) {
@@ -424,7 +429,7 @@
             if (elem.fragmentId !== fragmentId) {
                 elem.action = 0;
             }
-            console.log(elem.fragmentId, elem.action);
+            // console.log(elem.fragmentId, elem.action);
         }
     }
 
@@ -447,10 +452,10 @@
         inputElement.value = value;
         if (isNumber(value)) {
             fragmentInfo[property] = value;
-            console.log("valid true");
+            // console.log("valid true");
             return true;
         } else {
-            console.log("valid false");
+            // console.log("valid false");
             inputElement.style.color = 'red';
             return false;
         }
@@ -479,7 +484,7 @@
                 }
             }
         }
-
+        sendDataToServer();
     }
 
     function ProcessingOtherFieldsForN(value, fragmentInfo, tableId, flagReactant) {
@@ -507,7 +512,7 @@
             }
 
         }
-
+        sendDataToServer();
     }
 
     function ProcessingOtherFieldsForEqv(oldValue, fragmentInfo, tableId, flagReactant) {
@@ -518,7 +523,7 @@
             updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
             for (var key in reactantData) {
                 if (key !== fragmentInfo.fragmentId) {
-                    console.log("multiplier", multiplier);
+                    // console.log("multiplier", multiplier);
                     reactantData[key].m /= multiplier;
                     reactantData[key].n /= multiplier;
                     updateColumn(key, reactantData[key], tableId, true, false);
@@ -526,7 +531,7 @@
             }
             for (var key in productData) {
                 // if (key !== fragmentInfo.fragmentId) {
-                console.log("multiplier", multiplier);
+                // console.log("multiplier", multiplier);
                 productData[key].m /= multiplier;
                 productData[key].n /= multiplier;
                 updateColumn(key, productData[key], "productTable", false, false);
@@ -538,6 +543,7 @@
             fragmentInfo.n *= multiplier;
             updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
         }
+        sendDataToServer();
     }
 
     function getComposer() {
@@ -657,7 +663,7 @@
                 if (flagReactant && Object.keys(fragmentData).length > 1 && fragmentData[fragmentId].action === 1) {
                     flagSetAction = true;
                 }
-                console.log("delete", fragmentId);
+                // console.log("delete", fragmentId);
                 delete fragmentData[fragmentId];
             }
         }
@@ -668,6 +674,7 @@
             var radioButtons = document.getElementsByClassName('action');
             radioButtons[0].checked = true;
         }
+        sendDataToServer();
     }
 
     function processFragment(fragmentData, fragments, fragment, fragmentId, tableId, flagReactant) {
@@ -699,13 +706,13 @@
                 equivalent: 1.00,
                 action: 0
             };
-            console.log("add new", fragmentId, flagReactant, Object.keys(fragmentData).length);
+            // console.log("add new", fragmentId, flagReactant, Object.keys(fragmentData).length);
             if (Object.keys(fragmentData).length == 1 && flagReactant) {
                 fragmentData[fragmentId].action = 1;
             }
             createColumn(fragmentData[fragmentId], tableId, flagReactant);
         } else if (fragmentData[fragmentId].formula !== parseFormula((fragment.calcFormula()).getText())) {
-            console.log("update", fragmentId, flagReactant);
+            // console.log("update", fragmentId, flagReactant);
             var formula = fragment.calcFormula();
             var formulaText = parseFormula(formula.getText());
 
@@ -713,7 +720,6 @@
             fragmentData[fragmentId].molarMass = molarMass;
             updateColumn(fragmentId, fragmentData[fragmentId], tableId, flagReactant, true);
         }
-        sendDataToServer();
     }
 
     function parseFormula(inputString) {
@@ -788,10 +794,6 @@
             ProductData: dataProduct
         };
         let id = @ViewBag.Id;
-        // console.log(id);
-        // console.log('Data to send:', dataContainer);
-        // let my_url = '/chemeditor/save_data/' + id;
-        // console.log(my_url);
 
         $.ajax({
             type: 'POST',
