@@ -7,7 +7,6 @@ namespace ChemLab.Data.Entity
 {
     public class LabPractice
     {
-
         public int Id { get; set; }
 
         public string Name { get; set; }
