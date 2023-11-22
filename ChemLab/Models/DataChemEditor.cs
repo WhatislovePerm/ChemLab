@@ -3,8 +3,9 @@
     public class DataContainer
     {
         public string ChemDocumentData { get; set; }
-        public List<ReactantData> ReactantData { get; set; }
-        public List<ProductData> ProductData { get; set; }
+        public string ReactantData { get; set; }
+        public string ProductData { get; set; }
+        public double XCoordinateArrow { get; set; }
     }
 
     public class ReactantData

@@ -23,6 +23,8 @@ namespace ChemLab.Data.Entity
         public string ReactantData { get; set; }
         public string ProductData { get; set; }
 
+        public double XCoordinateArrow { get; set; }
+
         public LabPractice()
         {
 

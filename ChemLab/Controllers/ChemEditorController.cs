@@ -32,7 +32,8 @@ namespace ChemLab.Controllers
                 {
                     ChemDocumentData = labPractice.ChemDocumentData,
                     ReactantData = labPractice.ReactantData,
-                    ProductData = labPractice.ProductData
+                    ProductData = labPractice.ProductData,
+                    XCoordinateArrow = labPractice.XCoordinateArrow
                 });
             }
             catch (Exception ex)
@@ -47,10 +48,9 @@ namespace ChemLab.Controllers
         {
             try
             {
-                // Проверить, что dataContainer не равен null
                 if (dataContainer == null)
                 {
-                    return BadRequest(new { error = "DataContainer is null." });
+                    return BadRequest(new { error = "DataContainer is null!!!" });
                 }
 
                 var labPractice = await _labPracticeRepository.GetById(id);
@@ -60,21 +60,22 @@ namespace ChemLab.Controllers
                     return NotFound();
                 }
 
-                // Теперь можно проверять свойства внутри dataContainer
-                if (dataContainer.ChemDocumentData != null)
+                if (!string.IsNullOrEmpty(dataContainer.ChemDocumentData))
                 {
-                    labPractice.ChemDocumentData = JsonConvert.SerializeObject(dataContainer.ChemDocumentData);
+                    labPractice.ChemDocumentData = dataContainer.ChemDocumentData;
                 }
 
-                if (dataContainer.ReactantData != null)
+                if (!string.IsNullOrEmpty(dataContainer.ReactantData))
                 {
-                    labPractice.ReactantData = JsonConvert.SerializeObject(dataContainer.ReactantData);
+                    labPractice.ReactantData = dataContainer.ReactantData;
                 }
 
-                if (dataContainer.ProductData != null)
+                if (!string.IsNullOrEmpty(dataContainer.ProductData))
                 {
-                    labPractice.ProductData = JsonConvert.SerializeObject(dataContainer.ProductData);
+                    labPractice.ProductData = dataContainer.ProductData;
                 }
+
+                labPractice.XCoordinateArrow = dataContainer.XCoordinateArrow;
 
                 await _labPracticeRepository.Update(labPractice);
 
@@ -85,7 +86,6 @@ namespace ChemLab.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
-
 
     }
 }
