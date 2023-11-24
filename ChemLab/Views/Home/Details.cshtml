@@ -127,40 +127,41 @@
     var productData = {};
 
     function displayData(parsedData) {
-        let composer = getComposer();
-        let data = Kekule.IO.loadFormatData(parsedData.chemDocumentData, 'Kekule-JSON');
-        composer.setChemObj(data);
-
-        console.log("parsedData.reactantData:", parsedData.reactantData);
-
-        if (!(Math.abs(data.xCoordinateArrow + 1.0) < 0.1)) {
-            console.log("SET ITEM");
-            localStorage.setItem('xCoordinateArrow', data.xCoordinateArrow);
+        if (parsedData.chemDocumentData !== "") {
             let composer = getComposer();
-            composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
+            let data = Kekule.IO.loadFormatData(parsedData.chemDocumentData, 'Kekule-JSON');
+            composer.setChemObj(data);
 
-        }
+            // console.log("parsedData.reactantData:", parsedData.reactantData);
 
-        reactantData = JSON.parse(parsedData.reactantData);
-        productData = JSON.parse(parsedData.productData);
+            if (data.xCoordinateArrow !== undefined && (!(Math.abs(data.xCoordinateArrow + 1.0) < 0.1))) {
+                console.log("SET xCoordinateArrow", data.xCoordinateArrow);
+                console.log(!(Math.abs(data.xCoordinateArrow + 1.0) < 0.1));
+                localStorage.setItem('xCoordinateArrow', data.xCoordinateArrow);
+                let composer = getComposer();
+                composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
 
-        // let reactantData = JSON.parse(parsedData.reactantData);
-        for (let fragmentId in reactantData) {
-            if (reactantData.hasOwnProperty(fragmentId)) {
-                let fragment = reactantData[fragmentId];
-                createColumn(fragment, "reactantTable", true);
+            }
+
+            reactantData = JSON.parse(parsedData.reactantData);
+            productData = JSON.parse(parsedData.productData);
+
+            // let reactantData = JSON.parse(parsedData.reactantData);
+            for (let fragmentId in reactantData) {
+                if (reactantData.hasOwnProperty(fragmentId)) {
+                    let fragment = reactantData[fragmentId];
+                    createColumn(fragment, "reactantTable", true);
+                }
+            }
+
+            // let productData = JSON.parse(parsedData.productData);
+            for (let fragmentId in productData) {
+                if (productData.hasOwnProperty(fragmentId)) {
+                    let fragment = productData[fragmentId];
+                    createColumn(fragment, "productTable", false);
+                }
             }
         }
-
-        // let productData = JSON.parse(parsedData.productData);
-        for (let fragmentId in productData) {
-            if (productData.hasOwnProperty(fragmentId)) {
-                let fragment = productData[fragmentId];
-                createColumn(fragment, "productTable", false);
-            }
-        }
-
-        
     }
 
 
@@ -175,7 +176,7 @@
             });
             // console.log("xCoordinateArrow", data.xCoordinateArrow);
 
-            
+
             displayData(data);
         } catch (error) {
             console.error('Произошла ошибка при получении данных химического редактора:', error);
@@ -185,8 +186,7 @@
     function updateColumn(fragmentId, updatedData, tableId, flagReactant, flagChangeMW) {
         var table = document.getElementById(tableId);
         //  убрать потом магические числа
-
-        console.log("Updated mass for", fragmentId, "|", updatedData.m);
+        // console.log("Updated mass for", fragmentId, "|", updatedData.m);
         if (flagReactant) {
             var row = table.rows[6];
         } else {
@@ -202,7 +202,11 @@
                 var mwCell = table.rows[1].cells[i];
                 mwCell.innerHTML = (updatedData.molarMass).toFixed(2);
 
+
+
+
                 var mCell = table.rows[2].cells[i];
+
                 var mInput = document.createElement("input");
                 mInput.type = "text";
                 mInput.className = "m-input";
@@ -210,11 +214,11 @@
                 if (flagChangeMW) {
                     // console.log("flagChangeMW==true", fragmentId);
                     if (updatedData.m !== "") {
-                        mInput.value = (updatedData.n * updatedData.molarMass / 1000).toFixed(2);
+                        mInput.value = (updatedData.n * updatedData.molarMass / 1000 * multiplierUnit(updatedData, true)).toFixed(2);
                     }
                 } else {
                     // console.log("flagChangeMW==false", fragmentId);
-                    mInput.value = formatNumber(updatedData.m);
+                    mInput.value = formatNumber(updatedData.m * multiplierUnit(updatedData, true));
                 }
 
                 mCell.innerHTML = ''; // Очищаем содержимое ячейки
@@ -227,11 +231,43 @@
                     }
                 });
 
+
+                var mUnitSelect = document.createElement("select");
+                mUnitSelect.className = "m-unit-select";
+                var options = ["г", "мг"];
+                for (let i = 0; i < options.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = options[i];
+                    option.text = options[i];
+                    if (updatedData.mUnit === "мг" && options[i] === "мг") {
+                        option.selected = true;
+                    } else if (updatedData.mUnit === "г" && options[i] === "г") {
+                        option.selected = true;
+                    }
+                    mUnitSelect.appendChild(option);
+                }
+                mCell.appendChild(mUnitSelect);
+
+                mUnitSelect.addEventListener('change', function (e) {
+                    if (handleMUnitChange(e, mInput, updatedData, true)) {
+                        mInput.value = formatNumber(updatedData.m * 1000);
+                    } else {
+                        mInput.value = formatNumber(updatedData.m);
+                    }
+
+                });
+
+
+
+
                 var nCell = table.rows[3].cells[i];
                 var nInput = document.createElement("input");
                 nInput.type = "text";
                 nInput.className = "n-input";
-                nInput.value = formatNumber(updatedData.n);
+                nInput.value = formatNumber(updatedData.n * multiplierUnit(updatedData, false));
+                console.log("formatNumber(updatedData.n * multiplierUnit(updatedData, false)");
+                console.log("updatedData.n", updatedData.n);
+                console.log(" multiplierUnit(updatedData, false)", multiplierUnit(updatedData, false));
 
                 nCell.innerHTML = ''; // Очищаем содержимое ячейки
                 nCell.appendChild(nInput);
@@ -242,6 +278,36 @@
                         updatedData.n = "";
                     }
                 });
+                console.log("ninput:", nInput.value, "updatedData.n", updatedData.n);
+                var nUnitSelect = document.createElement("select");
+                nUnitSelect.className = "n-unit-select";
+                var options = ["моль", "ммоль"];
+                for (let i = 0; i < options.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = options[i];
+                    option.text = options[i];
+                    if (updatedData.nUnit === "моль" && options[i] === "моль") {
+                        option.selected = true;
+                    } else if (updatedData.nUnit === "ммоль" && options[i] === "ммоль") {
+                        option.selected = true;
+                    }
+                    nUnitSelect.appendChild(option);
+                }
+                nCell.appendChild(nUnitSelect);
+                nUnitSelect.addEventListener('change', function (e) {
+                    if (handleMUnitChange(e, nInput, updatedData, false)) {
+                        nInput.value = formatNumber(updatedData.n / 1000);
+                    } else {
+                        nInput.value = formatNumber(updatedData.n);
+                    }
+                });
+
+
+
+
+
+
+
 
                 var eqvCell = table.rows[4].cells[i];
                 var eqvInput = document.createElement("input");
@@ -263,13 +329,12 @@
                 break; // Выйти из цикла, как только ячейка будет обновлена
             }
         }
-        //sendDataToServer();
     }
 
     function createColumn(fragmentInfo, tableId, flagReactant) {
         var table = document.getElementById(tableId);
 
-        console.log("Create mass for", fragmentInfo.fragmentId, "|", fragmentInfo.m);
+        // console.log("Create mass for", fragmentInfo.fragmentId, "|", fragmentInfo.m);
         //  убрать потом магические числа
         var formulaRow = table.rows[0];
         var mwRow = table.rows[1];
@@ -299,13 +364,15 @@
             flagFullnes = true;
         }
 
+
+
         var nCell = nRow.insertCell(nRow.cells.length);
         var nInput = document.createElement("input");
         nInput.type = "text";
         nInput.className = "n-input";
         if (flagFullnes) {
             fragmentInfo.n = (nValueBase / eqvValueBase);
-            nInput.value = formatNumber(fragmentInfo.n);
+            nInput.value = formatNumber(fragmentInfo.n * multiplierUnit(fragmentInfo, false));
         } else {
             nInput.value = "";
         }
@@ -318,13 +385,40 @@
             }
         });
 
+        var nUnitSelect = document.createElement("select");
+        nUnitSelect.className = "n-unit-select";
+        var options = ["моль", "ммоль"];
+        for (let i = 0; i < options.length; i++) {
+            var option = document.createElement("option");
+            option.value = options[i];
+            option.text = options[i];
+            if (fragmentInfo.nUnit === "моль" && options[i] === "моль") {
+                option.selected = true;
+            } else if (fragmentInfo.nUnit === "ммоль" && options[i] === "ммоль") {
+                option.selected = true;
+            }
+            nUnitSelect.appendChild(option);
+        }
+        nCell.appendChild(nUnitSelect);
+        nUnitSelect.addEventListener('change', function (e) {
+            if (handleMUnitChange(e, nInput, fragmentInfo, false)) {
+                nInput.value = formatNumber(fragmentInfo.n / 1000);
+            } else {
+                nInput.value = formatNumber(fragmentInfo.n);
+            }
+        });
+
+
+
+
+
         var mCell = mRow.insertCell(mRow.cells.length);
         var mInput = document.createElement("input");
         mInput.type = "text";
         mInput.className = "m-input";
         if (flagFullnes) {
             fragmentInfo.m = (fragmentInfo.n * fragmentInfo.molarMass / 1000);
-            mInput.value = formatNumber(fragmentInfo.m);
+            mInput.value = formatNumber(fragmentInfo.m * multiplierUnit(fragmentInfo, true));
         } else {
             mInput.value = "";
         }
@@ -336,6 +430,32 @@
                 fragmentInfo.m = "";
             }
         });
+
+        var mUnitSelect = document.createElement("select");
+        mUnitSelect.className = "m-unit-select";
+        var options = ["г", "мг"];
+        for (let i = 0; i < options.length; i++) {
+            var option = document.createElement("option");
+            option.value = options[i];
+            option.text = options[i];
+            if (fragmentInfo.mUnit === "мг" && options[i] === "мг") {
+                option.selected = true;
+            } else if (fragmentInfo.mUnit === "г" && options[i] === "г") {
+                option.selected = true;
+            }
+            mUnitSelect.appendChild(option);
+        }
+        mCell.appendChild(mUnitSelect);
+        mUnitSelect.addEventListener('change', function (e) {
+            if (handleMUnitChange(e, mInput, fragmentInfo, true)) {
+                mInput.value = formatNumber(fragmentInfo.m * 1000);
+            } else {
+                mInput.value = formatNumber(fragmentInfo.m);
+            }
+        });
+
+
+
 
         var eqvCell = eqvRow.insertCell(eqvRow.cells.length);
         var eqvInput = document.createElement("input");
@@ -378,9 +498,31 @@
 
         var uniqeCell = uniqeRow.insertCell(uniqeRow.cells.length);
         uniqeCell.innerHTML = fragmentInfo.fragmentId;
-
-        //sendDataToServer();
     }
+
+    function handleMUnitChange(e, mInput, fragment, flagM) {
+        var selectedUnit = e.target.value;
+        if (flagM) {
+            if (selectedUnit === "мг") {
+                fragment.mUnit = "мг";
+                return true;
+            } else if (selectedUnit === "г") {
+                fragment.mUnit = "г";
+                return false;
+            }
+        } else {
+            if (selectedUnit === "моль") {
+                fragment.nUnit = "моль";
+                return true;
+            } else if (selectedUnit === "ммоль") {
+                fragment.nUnit = "ммоль";
+                return false;
+            }
+        }
+
+    }
+
+
 
     function updateEmptyFields(data, actvieFragment, tableId, flagReactant) {
         for (var key in data) {
@@ -399,13 +541,11 @@
                 }
             }
         }
-        //sendDataToServer();
     }
 
     function checkForFullness() {
         var reactionElementWithAction = Object.values(reactantData).find(elem => elem.action === 1);
         if (reactionElementWithAction && reactionElementWithAction.n !== "" && reactionElementWithAction.m !== "") {
-            // return reactionElementWithAction.n;
             return {
                 n: reactionElementWithAction.n,
                 equivalent: reactionElementWithAction.equivalent
@@ -422,7 +562,6 @@
             }
             return null;
         }
-        //sendDataToServer();
     }
 
     function resetAllActionsExcept(fragmentId) {
@@ -465,10 +604,25 @@
         }
     }
 
+    function multiplierUnit(fragment, flagM) {
+        if (flagM) {
+            if (fragment.mUnit === "мг") {
+                return 1000;
+            }
+            return 1;
+        } else {
+            if (fragment.nUnit === "моль") {
+                return 0.001;
+            }
+            return 1;
+        }
+    }
+
     function ProcessingOtherFieldsForM(value, fragmentInfo, tableId, flagReactant) {
-        var mValue = value;
+        var mValue = value / multiplierUnit(fragmentInfo, true);
         var newNvalue = (mValue / fragmentInfo.molarMass * 1000);
         fragmentInfo.n = newNvalue;
+        fragmentInfo.m = mValue;
         updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
 
         if (!(flagReactant && fragmentInfo.action === 0)) {
@@ -488,13 +642,14 @@
                 }
             }
         }
-        //sendDataToServer();
     }
 
     function ProcessingOtherFieldsForN(value, fragmentInfo, tableId, flagReactant) {
 
-        var nValue = value;
+        var nValue = value / multiplierUnit(fragmentInfo, false);
+        console.log("ProcessingOtherFieldsForNNNN", nValue);
         var newMvalue = (nValue * fragmentInfo.molarMass / 1000);
+        fragmentInfo.n = nValue;
         fragmentInfo.m = newMvalue;
         updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
 
@@ -516,12 +671,9 @@
             }
 
         }
-        //sendDataToServer();
     }
 
     function ProcessingOtherFieldsForEqv(oldValue, fragmentInfo, tableId, flagReactant) {
-        // console.log("fragmentInfo.equivalent / oldValue = ", fragmentInfo.equivalent, "*", oldValue, "=", fragmentInfo.equivalent / oldValue);
-
         if (flagReactant && fragmentInfo.action === 1) {
             var multiplier = fragmentInfo.equivalent / oldValue;
             updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
@@ -534,12 +686,10 @@
                 }
             }
             for (var key in productData) {
-                // if (key !== fragmentInfo.fragmentId) {
                 // console.log("multiplier", multiplier);
                 productData[key].m /= multiplier;
                 productData[key].n /= multiplier;
                 updateColumn(key, productData[key], "productTable", false, false);
-                // }
             }
         } else {
             var multiplier = fragmentInfo.equivalent / oldValue;
@@ -547,14 +697,11 @@
             fragmentInfo.n *= multiplier;
             updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
         }
-        //sendDataToServer();
     }
 
     function getComposer() {
         return Kekule.Widget.getWidgetById('composer');
     }
-
-    
 
     async function init() {
         localStorage.removeItem('xCoordinateArrow');
@@ -563,7 +710,7 @@
 
         await getfile();
 
-        console.log('Reactant Data:', reactantData);
+        // console.log('Reactant Data:', reactantData);
 
 
         composer.getEditor().on('operChange', handleOperationChangeOrUndo);
@@ -633,107 +780,106 @@
 
         await sendDataToServerAsync();
 
-        console.log('Данные успешно отправлены на сервер.');
+        // console.log('Данные успешно отправлены на сервер.');
     }
 
 
     function deleteFragment(fragmentData, tableId, observedFragmentIds, flagReactant) {
-            var flagSetAction = false;
-            var columnsToDelete = [];
+        var flagSetAction = false;
+        var columnsToDelete = [];
 
-            for (var existingFragmentId in fragmentData) {
-                if (!observedFragmentIds[existingFragmentId]) {
-                    columnsToDelete.push(existingFragmentId);
-                }
+        for (var existingFragmentId in fragmentData) {
+            if (!observedFragmentIds[existingFragmentId]) {
+                columnsToDelete.push(existingFragmentId);
             }
+        }
+        if (columnsToDelete.length > 0) {
+            var tmp = 5;  //  магические числа
+            if (flagReactant) {
+                tmp = 6;
+            }
+            // Удаляем столбцы из таблицы в обратном порядке
+            var table = document.getElementById(tableId);
 
-            if (columnsToDelete.length > 0) {
-                var tmp = 5;  //  магические числа
-                if (flagReactant) {
-                    tmp = 6;
-                }
+            for (var i = columnsToDelete.length - 1; i >= 0; i--) {
+                var fragmentId = columnsToDelete[i];
 
-                // Удаляем столбцы из таблицы в обратном порядке
-                var table = document.getElementById(tableId);
-
-                for (var i = columnsToDelete.length - 1; i >= 0; i--) {
-                    var fragmentId = columnsToDelete[i];
-
-                    for (var j = 0; j < table.rows[tmp].cells.length; j++) {
-                        if (table.rows[tmp].cells[j].innerHTML === fragmentId) {
-                            for (var k = 0; k < table.rows.length; k++) {
-                                table.rows[k].deleteCell(j);
-                            }
+                for (var j = 0; j < table.rows[tmp].cells.length; j++) {
+                    if (table.rows[tmp].cells[j].innerHTML === fragmentId) {
+                        for (var k = 0; k < table.rows.length; k++) {
+                            table.rows[k].deleteCell(j);
                         }
                     }
-
-                    if (flagReactant && Object.keys(fragmentData).length > 1 && fragmentData[fragmentId].action === 1) {
-                        flagSetAction = true;
-                    }
-
-                    delete fragmentData[fragmentId];
                 }
-            }
 
-            if (flagReactant && flagSetAction) {
-                var fragmentIds = Object.keys(fragmentData);
-                var firstFragmentId = fragmentIds[0];
-                fragmentData[firstFragmentId].action = 1;
+                if (flagReactant && Object.keys(fragmentData).length > 1 && fragmentData[fragmentId].action === 1) {
+                    flagSetAction = true;
+                }
 
-                var radioButtons = document.getElementsByClassName('action');
-                radioButtons[0].checked = true;
+                delete fragmentData[fragmentId];
             }
+        }
+
+        if (flagReactant && flagSetAction) {
+            var fragmentIds = Object.keys(fragmentData);
+            var firstFragmentId = fragmentIds[0];
+            fragmentData[firstFragmentId].action = 1;
+
+            var radioButtons = document.getElementsByClassName('action');
+            radioButtons[0].checked = true;
+        }
 
     }
 
 
     function processFragment(fragmentData, fragments, fragment, fragmentId, tableId, flagReactant) {
-            var totalMass = 0;
+        var totalMass = 0;
 
-            for (var i = 0, l = fragment.getNodeCount(); i < l; ++i) {
-                var node = fragment.getNodeAt(i);
+        for (var i = 0, l = fragment.getNodeCount(); i < l; ++i) {
+            var node = fragment.getNodeAt(i);
 
-                if (node.getAtomicMass) {
-                    totalMass += node.getAtomicMass();
-                }
-
-                if (node.getImplicitHydrogenCount) {
-                    var hcount = node.getImplicitHydrogenCount() || 0;
-                    totalMass += hcount * 1.01;
-                }
+            if (node.getAtomicMass) {
+                totalMass += node.getAtomicMass();
             }
 
-            var molarMass = totalMass;
+            if (node.getImplicitHydrogenCount) {
+                var hcount = node.getImplicitHydrogenCount() || 0;
+                totalMass += hcount * 1.01;
+            }
+        }
 
-            if (!fragmentData[fragmentId]) {
-                var formula = fragment.calcFormula();
-                var formulaText = parseFormula(formula.getText());
+        var molarMass = totalMass;
 
-                fragmentData[fragmentId] = {
-                    fragment: fragment,
-                    fragmentId: fragmentId,
-                    formula: formulaText,
-                    molarMass: molarMass,
-                    m: "",
-                    n: "",
-                    equivalent: 1.00,
-                    action: 0
-                };
+        if (!fragmentData[fragmentId]) {
+            var formula = fragment.calcFormula();
+            var formulaText = parseFormula(formula.getText());
 
-                if (Object.keys(fragmentData).length == 1 && flagReactant) {
-                    fragmentData[fragmentId].action = 1;
-                }
+            fragmentData[fragmentId] = {
+                fragment: fragment,
+                fragmentId: fragmentId,
+                formula: formulaText,
+                molarMass: molarMass,
+                m: "",
+                mUnit: "г",
+                n: "",
+                nUnit: "ммоль",
+                equivalent: 1.00,
+                action: 0
+            };
 
-                createColumn(fragmentData[fragmentId], tableId, flagReactant);
-            } else if (fragmentData[fragmentId].formula !== parseFormula((fragment.calcFormula()).getText())) {
-                var formula = fragment.calcFormula();
-                var formulaText = parseFormula(formula.getText());
-
-                fragmentData[fragmentId].formula = formulaText;
-                fragmentData[fragmentId].molarMass = molarMass;
-                updateColumn(fragmentId, fragmentData[fragmentId], tableId, flagReactant, true);
+            if (Object.keys(fragmentData).length == 1 && flagReactant) {
+                fragmentData[fragmentId].action = 1;
             }
 
+            createColumn(fragmentData[fragmentId], tableId, flagReactant);
+        } else if (fragmentData[fragmentId].formula !== parseFormula((fragment.calcFormula()).getText())) {
+            var formula = fragment.calcFormula();
+            var formulaText = parseFormula(formula.getText());
+
+            fragmentData[fragmentId].formula = formulaText;
+            fragmentData[fragmentId].molarMass = molarMass;
+            updateColumn(fragmentId, fragmentData[fragmentId], tableId, flagReactant, true);
+        }
     }
 
 
@@ -830,24 +976,24 @@
                     let contentType = response.headers.get('content-type');
                     if (contentType && contentType.indexOf('application/json') !== -1) {
                         let responseData = await response.json();
-                        console.log('Данные успешно сохранены на сервере.', responseData);
+                        // console.log('Данные успешно сохранены на сервере.', responseData);
                         return responseData;
                     } else {
-                        console.log('Данные успешно сохранены на сервере.');
+                        // console.log('Данные успешно сохранены на сервере.');
                         return null;
                     }
                 } else {
-                    console.log('Данные успешно сохранены на сервере.');
+                    // console.log('Данные успешно сохранены на сервере.');
                     return null;
                 }
             } else {
-                console.error('Произошла ошибка при отправке данных на сервер:', response.statusText);
+                // console.error('Произошла ошибка при отправке данных на сервер:', response.statusText);
                 let errorText = await response.text();
-                console.error('Сообщение об ошибке сервера:', errorText);
+                // console.error('Сообщение об ошибке сервера:', errorText);
                 throw new Error(response.statusText);
             }
         } catch (err) {
-            console.error('Произошла ошибка в sendDataToServerAsync:', err);
+            // console.error('Произошла ошибка в sendDataToServerAsync:', err);
             throw err;
         }
     }
@@ -874,11 +1020,13 @@
                 formula: fragment.formula,
                 molarMass: fragment.molarMass,
                 m: fragment.m,
+                mUnit: fragment.mUnit,
                 n: fragment.n,
+                nUnit: fragment.nUnit,
                 equivalent: fragment.equivalent,
                 action: fragment.action
             };
-            console.log(reactantObject[fragmentId].fragmentId, "|", reactantObject[fragmentId].m);
+            // console.log(reactantObject[fragmentId].fragmentId, "|", reactantObject[fragmentId].m);
         }
 
         for (let fragmentId in productData) {
@@ -888,7 +1036,9 @@
                 formula: fragment.formula,
                 molarMass: fragment.molarMass,
                 m: fragment.m,
+                mUnit: fragment.mUnit,
                 n: fragment.n,
+                nUnit: fragment.nUnit,
                 equivalent: fragment.equivalent,
                 action: fragment.action
             };
