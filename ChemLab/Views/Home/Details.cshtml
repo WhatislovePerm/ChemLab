@@ -8,6 +8,8 @@
 <hr />
 
 <link rel="stylesheet" type="text/css" href="~/lib/libs/dist/themes/default/kekule.css" />
+
+
 <style>
     p {
         margin: 0.3em 0.5em;
@@ -66,6 +68,39 @@
     #productTable tr:last-child {
         display: none;
     }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон */
+    }
+
+    /* Стили для контента внутри модального окна */
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 600px;
+        text-align: center;
+    }
+
+        /* Стили для кнопки закрытия */
+        .modal-content button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
 </style>
 
 <div id="stage">
@@ -119,6 +154,7 @@
     </tr>
 </table>
 
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CAS Number Lookup</title>
@@ -126,6 +162,9 @@
 
 <script src="~/lib/libs/raphael-min.2.0.1.js"></script>
 <script src="~/lib/libs/dist/kekule.js?"></script>
+
+<img id="infoImage" src="~/info.png" alt="Информация" style="width: 20px; height: 20px;">
+
 <script>
 
     var reactantData = {};
@@ -140,8 +179,8 @@
             // console.log("parsedData.reactantData:", parsedData.reactantData);
 
             if (data.xCoordinateArrow !== undefined && (!(Math.abs(data.xCoordinateArrow + 1.0) < 0.1))) {
-                console.log("SET xCoordinateArrow", data.xCoordinateArrow);
-                console.log(!(Math.abs(data.xCoordinateArrow + 1.0) < 0.1));
+                //console.log("SET xCoordinateArrow", data.xCoordinateArrow);
+                //console.log(!(Math.abs(data.xCoordinateArrow + 1.0) < 0.1));
                 localStorage.setItem('xCoordinateArrow', data.xCoordinateArrow);
                 let composer = getComposer();
                 composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
@@ -151,21 +190,22 @@
             reactantData = JSON.parse(parsedData.reactantData);
             productData = JSON.parse(parsedData.productData);
 
-            // let reactantData = JSON.parse(parsedData.reactantData);
-            for (let fragmentId in reactantData) {
+            let chemObj = getComposer().getChemObj();
+            var fragments = Kekule.ChemStructureUtils.getAllStructFragments(chemObj, true);
+
+
+            for (var i = 0; i < fragments.length; i++) {
+                var fragment = fragments[i];
+                var fragmentId = fragment.__$__k__p__id;
                 if (reactantData.hasOwnProperty(fragmentId)) {
-                    let fragment = reactantData[fragmentId];
-                    createColumn(fragment, "reactantTable", true);
+                    reactantData[fragmentId].fragment = fragment;
+                    createColumn(reactantData[fragmentId], "reactantTable", true);
+                } else if (productData.hasOwnProperty(fragmentId)) {
+                    productData[fragmentId].fragment = fragment;
+                    createColumn(productData[fragmentId], "productTable", false);
                 }
             }
 
-            // let productData = JSON.parse(parsedData.productData);
-            for (let fragmentId in productData) {
-                if (productData.hasOwnProperty(fragmentId)) {
-                    let fragment = productData[fragmentId];
-                    createColumn(fragment, "productTable", false);
-                }
-            }
         }
     }
 
@@ -188,6 +228,64 @@
         }
     }
 
+
+    function openInfoWindowWithChemInfo(smiles, formula) {
+        try {
+            var modal = document.createElement("div");
+            modal.className = "modal";
+            var modalContent = document.createElement("div");
+            modalContent.className = "modal-content";
+
+            var formulaText = document.createElement("p");
+            formulaText.innerText = "Дополнительная информация о " + formula;
+            modalContent.appendChild(formulaText);
+
+            var loadingText = document.createElement("p");
+            loadingText.innerText = "Идет загрузка данных...";
+            modalContent.appendChild(loadingText);
+
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            modal.style.display = "block";
+
+            getChemInfoFromServer(smiles)
+                .then((chemInfo) => {
+                    loadingText.style.display = "none";
+
+                    if (chemInfo) {
+                        var casNumberText = document.createElement("p");
+                        casNumberText.innerText = "CAS Number: " + chemInfo.casNumber;
+                        modalContent.appendChild(casNumberText);
+
+                        var firstSynonymText = document.createElement("p");
+                        firstSynonymText.innerText = "Имя: " + chemInfo.firstSynonym;
+                        modalContent.appendChild(firstSynonymText);
+
+                        var image = document.createElement("img");
+                        image.src = "data:image/png;base64," + chemInfo.imageDataUrl;
+                        modalContent.appendChild(image);
+                    } else {
+                        var errorText = document.createElement("p");
+                        errorText.innerText = "Не удалось найти информацию";
+                        modalContent.appendChild(errorText);
+                    }
+
+                    var closeButton = document.createElement("button");
+                    closeButton.innerText = "Закрыть";
+                    closeButton.addEventListener("click", function () {
+                        modal.style.display = "none";
+                    });
+                    modalContent.appendChild(closeButton);
+                })
+                .catch((error) => {
+                    console.error('Ошибка:', error.message);
+                });
+        } catch (error) {
+            console.error('Ошибка:', error.message);
+        }
+    }
+
+
     function updateColumn(fragmentId, updatedData, tableId, flagReactant, flagChangeMW) {
         var table = document.getElementById(tableId);
         //  убрать потом магические числа
@@ -201,8 +299,34 @@
             var cell = row.cells[i];
             var cellFragmentId = cell.innerHTML;
             if (cellFragmentId === fragmentId) {
+
+                /////////////////////////////////////////////////////////
+
                 var formulaCell = table.rows[0].cells[i];
                 formulaCell.innerHTML = updatedData.formula;
+
+                var infoImage = document.getElementById("infoImage");
+
+                var infoButton = document.createElement("button");
+                infoButton.type = "button";
+                infoButton.style.border = "none";
+                infoButton.style.padding = "0";
+                infoButton.style.backgroundColor = "transparent";
+                infoButton.style.marginLeft = "5px";
+
+                var clonedImage = infoImage.cloneNode(true);
+                infoButton.appendChild(clonedImage);
+
+                infoButton.addEventListener("click", function () {
+                    var smiles = Kekule.IO.saveFormatData(updatedData.fragment, 'smi');
+                    // console.log("smiles", smiles);
+                    // console.log("updatedData.formula", updatedData.formula);
+                    openInfoWindowWithChemInfo(smiles, updatedData.formula);
+                });
+
+                formulaCell.appendChild(infoButton);
+
+                /////////////////////////////////////////////////////////
 
                 var mwCell = table.rows[1].cells[i];
                 mwCell.innerHTML = (updatedData.molarMass).toFixed(2);
@@ -264,9 +388,6 @@
                 nInput.type = "text";
                 nInput.className = "n-input";
                 nInput.value = formatNumber(updatedData.n * multiplierUnit(updatedData, false));
-                console.log("formatNumber(updatedData.n * multiplierUnit(updatedData, false)");
-                console.log("updatedData.n", updatedData.n);
-                console.log(" multiplierUnit(updatedData, false)", multiplierUnit(updatedData, false));
 
                 nCell.innerHTML = ''; // Очищаем содержимое ячейки
                 nCell.appendChild(nInput);
@@ -277,7 +398,7 @@
                         updatedData.n = "";
                     }
                 });
-                console.log("ninput:", nInput.value, "updatedData.n", updatedData.n);
+                //console.log("ninput:", nInput.value, "updatedData.n", updatedData.n);
                 var nUnitSelect = document.createElement("select");
                 nUnitSelect.className = "n-unit-select";
                 var options = ["моль", "ммоль"];
@@ -342,8 +463,34 @@
             var uniqeRow = table.rows[5];
         }
 
+
         var formulaCell = formulaRow.insertCell(formulaRow.cells.length);
         formulaCell.innerHTML = fragmentInfo.formula;
+
+        var infoImage = document.getElementById("infoImage");
+
+        var infoButton = document.createElement("button");
+        infoButton.type = "button";
+        infoButton.style.border = "none";
+        infoButton.style.padding = "0";
+        infoButton.style.backgroundColor = "transparent";
+        infoButton.style.marginLeft = "5px";
+
+        var clonedImage = infoImage.cloneNode(true);
+        infoButton.appendChild(clonedImage);
+
+        infoButton.addEventListener("click", function () {
+            var smiles = Kekule.IO.saveFormatData(fragmentInfo.fragment, 'smi');
+            // console.log("smiles", smiles);
+            // console.log("formula", fragmentInfo.formula);
+            openInfoWindowWithChemInfo(smiles, fragmentInfo.formula);
+        });
+
+        formulaCell.appendChild(infoButton);
+
+
+
+        /////////////////////////////////////////////////////////////////////////
 
         var mwCell = mwRow.insertCell(mwRow.cells.length);
         mwCell.innerHTML = (fragmentInfo.molarMass).toFixed(2);
@@ -355,6 +502,8 @@
             var eqvValueBase = resFullness.equivalent;
             flagFullnes = true;
         }
+
+        /////////////////////////////////////////////////////////////////////////
 
         var nCell = nRow.insertCell(nRow.cells.length);
         var nInput = document.createElement("input");
@@ -399,6 +548,8 @@
             updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
         });
 
+        /////////////////////////////////////////////////////////////////////////
+
         var mCell = mRow.insertCell(mRow.cells.length);
         var mInput = document.createElement("input");
         mInput.type = "text";
@@ -442,6 +593,8 @@
             updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
         });
 
+        /////////////////////////////////////////////////////////////////////////
+
         var eqvCell = eqvRow.insertCell(eqvRow.cells.length);
         var eqvInput = document.createElement("input");
         eqvInput.type = "text";
@@ -456,6 +609,9 @@
                 fragmentInfo.equivalent = 1.00;
             }
         });
+
+        /////////////////////////////////////////////////////////////////////////
+
         if (flagReactant) {
 
             var actionCell = actionRow.insertCell(actionRow.cells.length);
@@ -480,6 +636,8 @@
             actionCell.appendChild(radioInput);
 
         }
+
+        /////////////////////////////////////////////////////////////////////////
 
         var uniqeCell = uniqeRow.insertCell(uniqeRow.cells.length);
         uniqeCell.innerHTML = fragmentInfo.fragmentId;
@@ -689,49 +847,36 @@
     }
 
 
-    // function fetchCASNumber(title) {
-    //     const url = `https:en.wikipedia.org/w/api.php?action=query&format=json&titles=${encodeURIComponent(title)}&prop=revisions&rvprop=content&origin=*`;
+    async function getChemInfoFromServer(smiles) {
+        try {
+            const response = await fetch(`/api/pubchem/get_cas/${encodeURIComponent(smiles)}`);
 
-    //     return fetch(url, {
-    //         method: 'GET',
-    //         mode: 'cors',
-    //     })
-    //         .then(response => response.json())
-    //         .then(data => {
-    //             const pages = data.query.pages;
-    //             const pageId = Object.keys(pages)[0];
-    //             const content = pages[pageId].revisions[0]['*'];
+            if (!response.ok) {
+            }
 
-    //            // Извлечение CAS-номера
-    //             const casMatch = content.match(/([0-9]{2,7}?\-[0-9]{2}\-[0-9])/);
-    //             const casNumber = casMatch ? casMatch[0] : null;
+            const data = await response.json();
 
-    //             return casNumber;
-    //         })
-    //         .catch(error => {
-    //             console.error('Ошибка при получении данных:', error);
-    //             throw error;
-    //         });
-    // }
+            if (data.success) {
+                const casNumber = data.casNumber;
+                const firstSynonym = data.firstSynonym;
+                const imageDataUrl = data.image;
+
+                return { casNumber, firstSynonym, imageDataUrl };
+            } else {
+                return null;
+            }
+        } catch (error) {
+            return null;
+        }
+    }
    
     async function init() {
-
-        // fetchCASNumber('benzene')
-        //     .then(casNumber => {
-        //         console.log('CAS-номер:', casNumber);
-        //     })
-        //     .catch(error => {
-        //         console.error('Ошибка:', error);
-        //     });
 
         localStorage.removeItem('xCoordinateArrow');
         var composer = getComposer();
         composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
 
         await getfile();
-
-        // console.log('Reactant Data:', reactantData);
-
 
         composer.getEditor().on('operChange', handleOperationChangeOrUndo);
         composer.getEditor().on('operUndo', handleOperationChangeOrUndo);
@@ -774,6 +919,7 @@
                 var fragment = fragments[i];
                 var fragmentId = fragment.__$__k__p__id;
 
+
                 if (fragment && fragment.__$__k__p__coord2D) {
                     var node = fragment.getNodeAt(0);
                     var xCoordinateAtom = fragment.__$__k__p__coord2D.x;
@@ -787,10 +933,10 @@
 
                 if (xCoordinateArrow === 0 || (xCoordinateArrow !== 0 && xCoordinateAtom < xCoordinateArrow)) {
                     observedFragmentIdsReactant[fragmentId] = true;
-                    processFragment(reactantData, fragments, fragment, fragmentId, "reactantTable", flagReactant);
+                    await processFragment(reactantData, fragments, fragment, fragmentId, "reactantTable", flagReactant);
                 } else {
                     observedFragmentIdsProduct[fragmentId] = true;
-                    processFragment(productData, fragments, fragment, fragmentId, "productTable", !flagReactant);
+                    await processFragment(productData, fragments, fragment, fragmentId, "productTable", !flagReactant);
                 }
             }
 
@@ -852,7 +998,7 @@
     }
 
 
-    function processFragment(fragmentData, fragments, fragment, fragmentId, tableId, flagReactant) {
+    async function processFragment(fragmentData, fragments, fragment, fragmentId, tableId, flagReactant) {
         var totalMass = 0;
 
         for (var i = 0, l = fragment.getNodeCount(); i < l; ++i) {

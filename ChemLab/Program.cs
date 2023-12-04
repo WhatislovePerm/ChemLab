@@ -11,6 +11,8 @@ using ChemLab.Data.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient();
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 var configuration = builder.Configuration;
@@ -74,6 +76,10 @@ app.MapControllerRoute(
     pattern: "chemeditor/save_data/{id}",
     defaults: new { controller = "ChemEditor", action = "SaveChemData" });
 
+app.MapControllerRoute(
+    name: "pubchem_get_cas",
+    pattern: "api/pubchem/get_cas/{smiles}",
+    defaults: new { controller = "PubChem", action = "GetChemInfo" });
 
 app.MapControllerRoute(
     name: "default",
