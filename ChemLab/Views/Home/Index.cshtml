@@ -1,7 +1,6 @@
-﻿
-@model List<LabPracticeViewModel>
+﻿@model List<LabPracticeViewModel>
 @{
-    ViewData["Title"] = "Лабороторные опыты";
+    ViewData["Title"] = "Лабораторные опыты";
 }
 @if (User.Identity.IsAuthenticated)
 {
@@ -18,7 +17,7 @@
                     <tr>
                         <th scope="col">Название</th>
                         <th scope="col">Дата создания</th>
-                        <th scope="col">Описание </th>
+                        <th scope="col">Описание</th>
                         <th scope="col">&nbsp;</th>
                     </tr>
                 </thead>
@@ -30,13 +29,17 @@
                             <td>@labPractice.DateOfCreate</td>
                             <td>@labPractice.Description</td>
                             <td>
-                                <a>Детали</a> |
-                                <a>Редактировать</a> |
-                                <a>Удалить</a>
+                                <a asp-action="Details" asp-route-id="@labPractice.Id">Детали</a> |
+                                <a asp-action="Edit" asp-route-id="@labPractice.Id">Редактировать</a> |
+                                <form method="post" asp-controller="Home" asp-action="Delete" asp-route-id="@labPractice.Id">
+                                    <button type="submit" class="btn btn-link">Удалить</button>
+                                </form>
                             </td>
                         </tr>
                     }
                 </tbody>
+
+
             </table>
         </div>
     </div>

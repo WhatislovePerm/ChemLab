@@ -37,13 +37,21 @@ namespace ChemLab.Services
         public async Task CreateLabPractice(CreateLabPracticeViewModel createLabPracticeViewModel, string userid)
         {
             var labPractice = new LabPractice(createLabPracticeViewModel);
+
             var user = await _accountRepository.GetById(userid);
+
+            if (user == null)
+            {
+                user = new ApplicationUser { Id = userid };
+                await _accountRepository.Add(user);
+            }
 
             labPractice.User = user;
             labPractice.Date = DateTime.Now;
 
             await _labPracticeRepository.Add(labPractice);
         }
+
     }
 }
 

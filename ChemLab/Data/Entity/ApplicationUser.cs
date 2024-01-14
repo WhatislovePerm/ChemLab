@@ -4,8 +4,14 @@ using Microsoft.AspNetCore.Identity;
 namespace ChemLab.Data.Entity
 {
     public class ApplicationUser : IdentityUser
+{
+    public string PictureUrl { get; set; }
+
+    public ApplicationUser()
     {
-        public string PictureUrl { get; internal set; }
+        PictureUrl = "default-url.jpg";
     }
+}
+
 }
 
