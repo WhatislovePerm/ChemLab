@@ -99,6 +99,16 @@ app.MapControllerRoute(
     defaults: new { controller = "PubChem", action = "GetChemInfo" });
 
 app.MapControllerRoute(
+    name: "chemeditor",
+    pattern: "chemeditor/save_text/{id}",
+    defaults: new { controller = "ChemEditor", action = "SaveText" });
+
+app.MapControllerRoute(
+    name: "chemeditorget",
+    pattern: "chemeditor/get_text/{id}",
+    defaults: new { controller = "ChemEditor", action = "GetText" });
+
+app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 

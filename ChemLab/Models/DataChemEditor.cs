@@ -42,4 +42,9 @@
         public string InputTexts { get; set; }
         public string StructData { get; set; }
     }
+
+    public class ContentModel
+    {
+        public string Content { get; set; }
+    }
 }

@@ -225,6 +225,35 @@
 
 <script>
 
+
+    window.addEventListener('DOMContentLoaded', insertEditorContent);
+
+    async function loadEditorContent() {
+        let id = @ViewBag.Id;
+        try {
+            let data = await $.ajax({
+                type: 'GET',
+                url: '/chemeditor/get_text/' + id,
+                contentType: 'application/json; charset=utf-8'
+            });
+            return data;
+        } catch (error) {
+            console.error('Произошла ошибка в loadEditorContent:', error);
+        }
+    }
+
+    async function insertEditorContent() {
+        try {
+            let editorContent = await loadEditorContent();
+            if (editorContent) {
+                let quill = document.querySelector('.ql-editor');
+                quill.innerHTML = editorContent;
+            }
+        } catch (err) {
+            console.error('Произошла ошибка при вставке текста в редактор:', err);
+        }
+    }
+
     // Функция для вставки текущей даты
     function insertCurrentDate() {
         var currentDate = new Date();
@@ -263,6 +292,42 @@
         theme: 'snow'
     });
 
+
+    document.getElementById('editor-container').addEventListener('focusout', async function () {
+        await saveEditorContent();
+    });
+
+    // Функция для сохранения содержимого редактора на сервере
+    async function saveEditorContent() {
+        // console.log("sendDataToServerAsync");
+        try {
+            let editorHtml = document.querySelector('.ql-editor').innerHTML; 
+            // console.log(editorHtml);
+            let data = {
+                Content: editorHtml
+            };
+
+            let id = @ViewBag.Id;
+
+            let response = await fetch('/chemeditor/save_text/' + id, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                console.log('Текст успешно загружен.');
+            } else {
+                console.error('Произошла ошибка при отправке текста:', response.statusText);
+            }
+        } catch (err) {
+            console.error('Произошла ошибка в saveEditorContent:', err);
+            throw err;
+        }
+    }
+
     const toggleButton = document.getElementById('toggleButton');
     const contentToToggle = document.getElementById('contentToToggle');
 
@@ -282,8 +347,8 @@
 
     class Table {
         constructor() {
-            this.reactantFragments = new Map(); // Хэш-таблица для реагентов
-            this.productFragments = new Map(); // Хэш-таблица для продуктов
+            this.reactantFragments = new Map();
+            this.productFragments = new Map();
             this.activeFragment = null;
         }
         tableReactant = document.getElementById("reactantTable");
@@ -905,13 +970,6 @@
 
             const currMap = this.flagReactant ? this.table.reactantFragments : this.table.productFragments;
             const formula = this.fragment.calcFormula();
-            // var node = this.fragment.getNodeAt(0);
-            // if (this.fragment.getNodeAt(0) && node instanceof Kekule.SubGroup) {
-                // console.log("fragment.getNodeAt(0).calcFormula();", this.fragment.getNodeAt(0).calcFormula());
-            // }
-            
-            // console.log("this.fragment.calcFormula();", this.fragment.calcFormula());
-            // console.log("formula.getText();", formula.getText());
 
             const formulaText = this.parseFormula(formula.getText());
 
@@ -1097,8 +1155,6 @@
                 // Очищаем текущие данные
                 this.table.reactantFragments.clear();
                 this.table.productFragments.clear();
-
-                //console.log(data);
                
                 if (data && data.reactantData) {
                     data.reactantData.forEach(reactant => {                        
@@ -1229,30 +1285,12 @@
 
             var fragments = Kekule.ChemStructureUtils.getAllStructFragments(this.chemObj, true);
 
-            // var chemDoc = this.composer.getChemObj();
-            // var formulas = [];
-            // for (var i = 0, l = chemDoc.getChildCount(); i < l; ++i) {
-            //     var child = chemDoc.getChildAt(i);
-            //     if (child instanceof Kekule.Molecule) {
-            //         formulas.push(child.calcFormula().getText());
-            //     }
-            // }
-            // console.log("form:", formulas);
-
             if (fragments.length == 0) {
                 this.removeAllColumnsExceptFirst();
             } else {
 
                 for (var i = 0; i < fragments.length; i++) {
                     var currFragment = fragments[i];
-                    // console.log(i,currFragment.calcFormula().getText());
-                    // console.log(currFragment.getAllChildConnectors());
-                    // if (i === 1) {
-                        
-                        // console.log(currFragment.getSubFragments());
-                        // console.log(currFragment.getSubFragments()[0].calcFormula().getText());
-                        // console.log(Kekule.IO.saveFormatData(currFragment, 'cml'));
-                    // }
                     const xArrow = this.xCoordinateArrow || null;
                     this.updateFragments(currFragment, xArrow);
                 }

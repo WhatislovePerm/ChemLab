@@ -203,5 +203,63 @@ namespace ChemLab.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
+       [HttpPost]
+        public async Task<IActionResult> SaveText(int id, [FromBody] ContentModel data)
+        {
+            try
+            {
+                if (data == null)
+                {
+                    return BadRequest(new { error = "DataContainer is null!!!" });
+                }
+
+                var labPractice = await _labPracticeRepository.GetById(id);
+
+                if (labPractice == null)
+                {
+                    return NotFound();
+                }
+
+                // Проверяем ChemDocumentData на null
+                if (data.Content != null)
+                {
+                    labPractice.TextContent = data.Content;
+                }
+
+                await _labPracticeRepository.Update(labPractice);
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetText(int id)
+        {
+            try
+            {
+                var labPractice = await _labPracticeRepository.GetById(id);
+
+                if (labPractice == null)
+                {
+                    return NotFound();
+                }
+
+                //return Json(new
+                //{
+                //    Content = labPractice.TextContent
+                //});
+
+                return Json(labPractice.TextContent);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }
