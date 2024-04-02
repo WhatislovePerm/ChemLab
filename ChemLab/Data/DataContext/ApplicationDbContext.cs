@@ -15,6 +15,8 @@ namespace ChemLab.Data.DataContext
 
         public DbSet<LabPractice> LabPractices { get; set; }
 
+        public DbSet<SubGroupMolecule> SubGroupMolecule { get; set; }
+
     }
 }
 

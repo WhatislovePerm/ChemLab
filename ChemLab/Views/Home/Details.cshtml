@@ -11,10 +11,8 @@
 
 
 <style>
-    p {
-        margin: 0.3em 0.5em;
-    }
 
+    /* Общие стили */
     #composer {
         height: 450px;
         width: 600px;
@@ -25,50 +23,56 @@
         clear: both;
     }
 
-    .ChemViewer {
-        width: 500px;
-        height: 400px;
-        border: 1px solid #ccc;
-    }
-
-    .data-grid {
+    .table-container {
         display: flex;
-        align-items: center;
-        gap: 10px;
+        flex-direction: row;
+        overflow-x: auto;
     }
 
-    .formula, .action, .molarMass, .mass, .mole {
-        flex: 1;
-        min-width: 0;
-        text-align: center;
+    #reactantTable,
+    #productTable {
+        margin-right: 20px;
+        width: auto;
     }
 
+    /* Стили для таблиц */
     table {
+        width: 100%;
         border-collapse: collapse;
-        max-width: 600px; /* Максимальная ширина таблицы */
-    }
-
-    table, th, td {
-        border: 1px solid black;
+        border-spacing: 0;
     }
 
     th, td {
-        padding: 8px;
-        text-align: center;
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+        /* min-height: 50px; */
+    }
+
+    th {
+        background-color: #f8f9fa;
+        color: #333;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    tr:last-child {
+        display: none;
     }
 
     tr:nth-child(even) {
         background-color: #f2f2f2;
     }
 
-    #reactantTable tr:last-child {
-        display: none;
+    td:not(:first-child):hover { /* изменено здесь */
+        background-color: #ddd;
     }
 
-    #productTable tr:last-child {
-        display: none;
-    }
+        td:not(:first-child):hover ~ td { /* изменено здесь */
+            background-color: transparent;
+        }
 
+    /* Стили для модального окна */
     .modal {
         display: none;
         position: fixed;
@@ -76,10 +80,9 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон */
+        background-color: rgba(0, 0, 0, 0.5);
     }
 
-    /* Стили для контента внутри модального окна */
     .modal-content {
         background-color: #fefefe;
         margin: 15% auto;
@@ -90,7 +93,6 @@
         text-align: center;
     }
 
-        /* Стили для кнопки закрытия */
         .modal-content button {
             margin-top: 10px;
             padding: 10px;
@@ -101,58 +103,111 @@
             cursor: pointer;
         }
 
+    /* Стили для текстовых полей и кнопок */
+    input[type="text"],
+    textarea,
+    button {
+        margin: 0.3em 0.5em;
+        padding: 0.5em;
+        box-sizing: border-box;
+        width: auto;
+    }
+
+
+    .hidden {
+        display: none;
+    }
+
 </style>
+<button id="toggleButton">Сохранить молекулу</button>
+
+
+<div id="contentToToggle" class="hidden">
+    <div>
+        <!--   <button id="btnGetData" data-widget="Kekule.Widget.Button" data-text="Get Data">Get Data</button> -->
+        <button id="btnSetAnchor" data-widget="Kekule.Widget.Button" data-text="Set Anchor(s)">Set Anchor(s)</button>
+        <select id="selStructType" data-widget="Kekule.Widget.SelectBox"></select>
+        <label>
+            Name:
+            <input id="editName" type="text" data-widget="Kekule.Widget.TextBox" />
+        </label>
+        <label>
+            Abbr:
+            <input id="editAbbr" type="text" data-widget="Kekule.Widget.TextBox" />
+        </label>
+        <label>
+            Formula Text:
+            <input id="editFormulaText" type="text" data-widget="Kekule.Widget.TextBox" />
+        </label>
+        <label>
+            Input Texts:
+            <textarea id="editInputTexts" type="text" data-widget="Kekule.Widget.TextArea"></textarea>
+        </label>
+    </div>
+
+    <div>
+        <button id="btnAddRepoItem" data-widget="Kekule.Widget.Button" data-text="Add item and update">Add item and update</button>
+    </div>
+
+</div>
+
 
 <div id="stage">
-    <div id="composer" data-widget="Kekule.Editor.Composer"
-         data-chem-obj="" data-resizable="true"></div>
+    <div id="composer"></div>
     <div class="FloatClearer"></div>
 </div>
 
-<table id="reactantTable">
-    <tr>
-        <td>Формула</td>
-    </tr>
-    <tr>
-        <td>MW</td>
-    </tr>
-    <tr>
-        <td>m</td>
-    </tr>
-    <tr>
-        <td>n</td>
-    </tr>
-    <tr>
-        <td>Экв.</td>
-    </tr>
-    <tr>
-        <td>Основной</td>
-    </tr>
-    <tr>
-        <td><input type="hidden" name="uniqe" value="">
-    </tr>
-</table>
+<div id="editor-container"></div>
 
-<table id="productTable">
-    <tr>
-        <td>Формула</td>
-    </tr>
-    <tr>
-        <td>MW</td>
-    </tr>
-    <tr>
-        <td>m</td>
-    </tr>
-    <tr>
-        <td>n</td>
-    </tr>
-    <tr>
-        <td>Экв.</td>
-    </tr>
-    <tr>
-        <td><input type="hidden" name="uniqe" value="">
-    </tr>
-</table>
+<div class="table-container">
+    <table id="reactantTable">
+        <tr>
+            <td>Формула</td>
+        </tr>
+        <tr>
+            <td>MW</td>
+        </tr>
+        <tr>
+            <td>m</td>
+        </tr>
+        <tr>
+            <td>n</td>
+        </tr>
+        <tr>
+            <td>Экв.</td>
+        </tr>
+        <tr>
+            <td>Основной</td>
+        </tr>
+        <tr>
+            <td><input type="hidden" name="unique" value="">
+        </tr>
+    </table>
+
+    <table id="productTable">
+        <tr>
+            <td>Формула</td>
+        </tr>
+        <tr>
+            <td>MW</td>
+        </tr>
+        <tr>
+            <td>m</td>
+        </tr>
+        <tr>
+            <td>n</td>
+        </tr>
+        <tr>
+            <td>Выход.</td>
+        </tr>
+        <tr>
+            <td>Основной</td>
+        </tr>
+        <tr>
+            <td><input type="hidden" name="unique" value="">
+        </tr>
+    </table>
+</div>
 
 
 <meta charset="UTF-8">
@@ -163,1057 +218,1541 @@
 <script src="~/lib/libs/raphael-min.2.0.1.js"></script>
 <script src="~/lib/libs/dist/kekule.js?"></script>
 
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
 <img id="infoImage" src="~/info.png" alt="Информация" style="width: 20px; height: 20px;">
 
 <script>
 
-    var reactantData = {};
-    var productData = {};
-
-    function displayData(parsedData) {
-        if (parsedData.chemDocumentData !== "") {
-            let composer = getComposer();
-            let data = Kekule.IO.loadFormatData(parsedData.chemDocumentData, 'Kekule-JSON');
-            composer.setChemObj(data);
-
-            // console.log("parsedData.reactantData:", parsedData.reactantData);
-
-            if (data.xCoordinateArrow !== undefined && (!(Math.abs(data.xCoordinateArrow + 1.0) < 0.1))) {
-                //console.log("SET xCoordinateArrow", data.xCoordinateArrow);
-                //console.log(!(Math.abs(data.xCoordinateArrow + 1.0) < 0.1));
-                localStorage.setItem('xCoordinateArrow', data.xCoordinateArrow);
-                let composer = getComposer();
-                composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
-
-            }
-
-            reactantData = JSON.parse(parsedData.reactantData);
-            productData = JSON.parse(parsedData.productData);
-
-            let chemObj = getComposer().getChemObj();
-            var fragments = Kekule.ChemStructureUtils.getAllStructFragments(chemObj, true);
+    // Функция для вставки текущей даты
+    function insertCurrentDate() {
+        var currentDate = new Date();
+        var dateString = currentDate.toLocaleDateString(); // Получаем дату в формате "DD.MM.YYYY" (можно настроить формат)
+        var timeString = currentDate.toLocaleTimeString(); // Получаем время в формате "HH:MM"
+        var quill = this.quill; // Получаем экземпляр Quill
+        quill.focus(); // Фокусируемся на редакторе
+        quill.insertText(quill.getSelection().index, '\n' + dateString + ' ' + timeString + '\n', { color: 'blue' }); // Вставляем дату и время с новой строки, устанавливая текст синим цветом
+    }
 
 
-            for (var i = 0; i < fragments.length; i++) {
-                var fragment = fragments[i];
-                var fragmentId = fragment.__$__k__p__id;
-                if (reactantData.hasOwnProperty(fragmentId)) {
-                    reactantData[fragmentId].fragment = fragment;
-                    createColumn(reactantData[fragmentId], "reactantTable", true);
-                } else if (productData.hasOwnProperty(fragmentId)) {
-                    productData[fragmentId].fragment = fragment;
-                    createColumn(productData[fragmentId], "productTable", false);
+    // Опции панели инструментов Quill
+    const toolbarOptions = [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline'],
+        ['code-block'],
+        ['link', 'image', 'video', 'formula'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+        [{ 'script': 'sub' }, { 'script': 'super' }],
+        [{ 'indent': '-1' }, { 'indent': '+1' }],
+        [{ 'direction': 'rtl' }],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'insertCurrentDate': 'Insert current date' }] // Добавляем кнопку для вставки текущей даты
+    ];
+
+    // Инициализация Quill с заданной панелью инструментов
+    const quill = new Quill('#editor-container', {
+        modules: {
+            toolbar: {
+                container: toolbarOptions,
+                handlers: {
+                    'insertCurrentDate': insertCurrentDate // Добавляем обработчик для кнопки вставки даты
                 }
             }
+        },
+        theme: 'snow'
+    });
 
+    const toggleButton = document.getElementById('toggleButton');
+    const contentToToggle = document.getElementById('contentToToggle');
+
+    toggleButton.addEventListener('click', () => {
+        contentToToggle.classList.toggle('hidden');
+    });
+
+    const TABLE_ROWS = {
+        FORMULA: 0,
+        MW: 1,
+        M: 2,
+        N: 3,
+        EQV: 4,
+        ACTION: 5,
+        UNIQUE: 6,
+    };
+
+    class Table {
+        constructor() {
+            this.reactantFragments = new Map(); // Хэш-таблица для реагентов
+            this.productFragments = new Map(); // Хэш-таблица для продуктов
+            this.activeFragment = null;
         }
-    }
+        tableReactant = document.getElementById("reactantTable");
+        tableProduct = document.getElementById("productTable");
+
+        printFragmentIds() {
+            console.log("Reactant Fragment IDs:");
+            for (let fragmentId of this.reactantFragments.keys()) {
+                console.log(fragmentId);
+            }
+
+            console.log("Product Fragment IDs:");
+            for (let fragmentId of this.productFragments.keys()) {
+                console.log(fragmentId);
+            }
+        }
 
 
-    async function getfile() {
-        console.log("GET FILE");
-        let id = @ViewBag.Id;
-        try {
-            let data = await $.ajax({
-                type: 'GET',
-                url: '/chemeditor/get_file/' + id,
-                contentType: 'application/json; charset=utf-8'
+        formulaCell(fragment, table, content, flagNew, index) {
+            const formulaRow = table.rows[TABLE_ROWS.FORMULA];
+            let formulaCell;
+            if (flagNew) {
+                formulaCell = formulaRow.insertCell(formulaRow.cells.length);
+            } else {
+                formulaCell = formulaRow.cells[index];
+
+            }
+            formulaCell.innerHTML = content;
+
+            const infoButton = this.createInfoButton(fragment);
+            formulaCell.appendChild(infoButton);
+        }
+
+        createInfoButton(data) {
+            const infoButton = document.createElement("button");
+            infoButton.type = "button";
+            infoButton.style.border = "none";
+            infoButton.style.padding = "0";
+            infoButton.style.backgroundColor = "transparent";
+            infoButton.style.marginLeft = "5px";
+
+            const clonedImage = document.getElementById("infoImage").cloneNode(true);
+            infoButton.appendChild(clonedImage);
+
+            infoButton.addEventListener("click", () => {
+                const smiles = Kekule.IO.saveFormatData(data.fragment, 'smi');
+                this.openInfoWindowWithChemInfo(smiles, data.formula);
             });
-            // console.log("xCoordinateArrow", data.xCoordinateArrow);
 
-
-            displayData(data);
-        } catch (error) {
-            console.error('Произошла ошибка при получении данных химического редактора:', error);
+            return infoButton;
         }
-    }
 
+        openInfoWindowWithChemInfo(smiles, formula) {
+            try {
+                var modal = document.createElement("div");
+                modal.className = "modal";
+                var modalContent = document.createElement("div");
+                modalContent.className = "modal-content";
 
-    function openInfoWindowWithChemInfo(smiles, formula) {
-        try {
-            var modal = document.createElement("div");
-            modal.className = "modal";
-            var modalContent = document.createElement("div");
-            modalContent.className = "modal-content";
+                var formulaText = document.createElement("p");
+                formulaText.innerText = "Дополнительная информация о " + formula;
+                modalContent.appendChild(formulaText);
 
-            var formulaText = document.createElement("p");
-            formulaText.innerText = "Дополнительная информация о " + formula;
-            modalContent.appendChild(formulaText);
+                var loadingText = document.createElement("p");
+                loadingText.innerText = "Идет загрузка данных...";
+                modalContent.appendChild(loadingText);
 
-            var loadingText = document.createElement("p");
-            loadingText.innerText = "Идет загрузка данных...";
-            modalContent.appendChild(loadingText);
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+                modal.style.display = "block";
 
-            modal.appendChild(modalContent);
-            document.body.appendChild(modal);
-            modal.style.display = "block";
+                this.getChemInfoFromServer(smiles)
+                    .then((chemInfo) => {
+                        loadingText.style.display = "none";
 
-            getChemInfoFromServer(smiles)
-                .then((chemInfo) => {
-                    loadingText.style.display = "none";
+                        if (chemInfo) {
+                            var casNumberText = document.createElement("p");
+                            casNumberText.innerText = "CAS Number: " + chemInfo.casNumber;
+                            modalContent.appendChild(casNumberText);
 
-                    if (chemInfo) {
-                        var casNumberText = document.createElement("p");
-                        casNumberText.innerText = "CAS Number: " + chemInfo.casNumber;
-                        modalContent.appendChild(casNumberText);
+                            var firstSynonymText = document.createElement("p");
+                            firstSynonymText.innerText = "Имя: " + chemInfo.firstSynonym;
+                            modalContent.appendChild(firstSynonymText);
 
-                        var firstSynonymText = document.createElement("p");
-                        firstSynonymText.innerText = "Имя: " + chemInfo.firstSynonym;
-                        modalContent.appendChild(firstSynonymText);
+                            var image = document.createElement("img");
+                            image.src = "data:image/png;base64," + chemInfo.imageDataUrl;
+                            modalContent.appendChild(image);
+                        } else {
+                            var errorText = document.createElement("p");
+                            errorText.innerText = "Не удалось найти информацию";
+                            modalContent.appendChild(errorText);
+                        }
 
-                        var image = document.createElement("img");
-                        image.src = "data:image/png;base64," + chemInfo.imageDataUrl;
-                        modalContent.appendChild(image);
-                    } else {
-                        var errorText = document.createElement("p");
-                        errorText.innerText = "Не удалось найти информацию";
-                        modalContent.appendChild(errorText);
-                    }
-
-                    var closeButton = document.createElement("button");
-                    closeButton.innerText = "Закрыть";
-                    closeButton.addEventListener("click", function () {
-                        modal.style.display = "none";
+                        var closeButton = document.createElement("button");
+                        closeButton.innerText = "Закрыть";
+                        closeButton.addEventListener("click", function () {
+                            modal.style.display = "none";
+                        });
+                        modalContent.appendChild(closeButton);
+                    })
+                    .catch((error) => {
+                        console.error('Ошибка:', error.message);
                     });
-                    modalContent.appendChild(closeButton);
-                })
-                .catch((error) => {
-                    console.error('Ошибка:', error.message);
-                });
-        } catch (error) {
-            console.error('Ошибка:', error.message);
+            } catch (error) {
+                console.error('Ошибка:', error.message);
+            }
         }
-    }
 
+        async getChemInfoFromServer(smiles) {
+            try {
+            const response = await fetch(`/api/pubchem/get_cas/${encodeURIComponent(smiles)}`);
+                if (!response.ok) {
+                }
 
-    function updateColumn(fragmentId, updatedData, tableId, flagReactant, flagChangeMW) {
-        var table = document.getElementById(tableId);
-        //  убрать потом магические числа
-        // console.log("Updated mass for", fragmentId, "|", updatedData.m);
-        if (flagReactant) {
-            var row = table.rows[6];
-        } else {
-            var row = table.rows[5];
+                const data = await response.json();
+
+                
+
+                if (data.success) {
+                    const casNumber = data.casNumber;
+                    const firstSynonym = data.firstSynonym;
+                    const imageDataUrl = data.image;
+
+                    return { casNumber, firstSynonym, imageDataUrl };
+                } else {
+                    return null;
+                }
+            } catch (error) {
+                return null;
+            }
         }
-        for (var i = 1; i < row.cells.length; i++) {
-            var cell = row.cells[i];
-            var cellFragmentId = cell.innerHTML;
-            if (cellFragmentId === fragmentId) {
 
-                /////////////////////////////////////////////////////////
+        mwCell(table, content, flagNew, index) {
+            const mwRow = table.rows[TABLE_ROWS.MW];
+            let mwCell;
+            if (flagNew) {
+                mwCell = mwRow.insertCell(mwRow.cells.length);
+            } else {
+                mwCell = mwRow.cells[index];
+            }
+            mwCell.innerHTML = content.toFixed(2);
+        }
 
-                var formulaCell = table.rows[0].cells[i];
-                formulaCell.innerHTML = updatedData.formula;
+        nCell(table, fragment, flagNew, index) {
 
-                var infoImage = document.getElementById("infoImage");
+            const nRow = table.rows[TABLE_ROWS.N];
+            let nCell;
+            if (flagNew) {
+                nCell = nRow.insertCell(nRow.cells.length);
+                if (this.activeFragment) {  //  проверить как будет работать с переносимыми столбцами TO DO
+                    var nValueBase = this.activeFragment.n;
+                    var eqvValueBase = this.activeFragment.equivalent;
+                    fragment.n = (nValueBase / eqvValueBase);
+                }
+            } else {
+                nCell = nRow.cells[index];
+            }
 
-                var infoButton = document.createElement("button");
-                infoButton.type = "button";
-                infoButton.style.border = "none";
-                infoButton.style.padding = "0";
-                infoButton.style.backgroundColor = "transparent";
-                infoButton.style.marginLeft = "5px";
+            //
+            const nInput = document.createElement("input");
+            nInput.type = "text";
+            nInput.className = "n-input";
+            nInput.value = this.formatNumber(fragment.n * this.multiplierUnit(fragment, false));
 
-                var clonedImage = infoImage.cloneNode(true);
-                infoButton.appendChild(clonedImage);
+            nCell.innerHTML = '';
+            nCell.appendChild(nInput);
 
-                infoButton.addEventListener("click", function () {
-                    var smiles = Kekule.IO.saveFormatData(updatedData.fragment, 'smi');
-                    // console.log("smiles", smiles);
-                    // console.log("updatedData.formula", updatedData.formula);
-                    openInfoWindowWithChemInfo(smiles, updatedData.formula);
-                });
-
-                formulaCell.appendChild(infoButton);
-
-                /////////////////////////////////////////////////////////
-
-                var mwCell = table.rows[1].cells[i];
-                mwCell.innerHTML = (updatedData.molarMass).toFixed(2);
-
-                var mCell = table.rows[2].cells[i];
-
-                var mInput = document.createElement("input");
-                mInput.type = "text";
-                mInput.className = "m-input";
-                // console.log("m-input", updatedData.m);
-                if (flagChangeMW) {
-                    // console.log("flagChangeMW==true", fragmentId);
-                    if (updatedData.m !== "") {
-                        mInput.value = (updatedData.n * updatedData.molarMass / 1000 * multiplierUnit(updatedData, true)).toFixed(2);
+            nInput.addEventListener('blur', (e) => {
+                if (this.validateProperty(e.target)) {
+                    if (this.checkSimilar(nInput.value, fragment.n * this.multiplierUnit(fragment, false))) {
+                        nInput.value = this.formatNumber(fragment.n * this.multiplierUnit(fragment, false));
+                    } else {
+                        fragment.n = nInput.value / this.multiplierUnit(fragment, false);
+                        nInput.value = this.formatNumber(nInput.value);
+                        // console.log("ProcessingOtherFieldsForN");
+                        this.ProcessingOtherFieldsForN(e.target.value, fragment);
                     }
                 } else {
-                    // console.log("flagChangeMW==false", fragmentId);
-                    mInput.value = formatNumber(updatedData.m * multiplierUnit(updatedData, true));
+                    fragment.n = "";
                 }
+            });
 
-                mCell.innerHTML = ''; // Очищаем содержимое ячейки
-                mCell.appendChild(mInput);
-                mInput.addEventListener('blur', function (e) {
-                    if (validateAndSetProperty(e.target, "m", updatedData)) {
-                        ProcessingOtherFieldsForM(e.target.value, updatedData, tableId, flagReactant);
-                    } else {
-                        updatedData.m = "";
-                    }
-                });
+            const nUnitSelect = this.createNUnitSelect(fragment, nInput);
+            nCell.appendChild(nUnitSelect);
+        }
 
-                var mUnitSelect = document.createElement("select");
-                mUnitSelect.className = "m-unit-select";
-                var options = ["г", "мг"];
-                for (let i = 0; i < options.length; i++) {
-                    var option = document.createElement("option");
-                    option.value = options[i];
-                    option.text = options[i];
-                    if (updatedData.mUnit === "мг" && options[i] === "мг") {
-                        option.selected = true;
-                    } else if (updatedData.mUnit === "г" && options[i] === "г") {
-                        option.selected = true;
-                    }
-                    mUnitSelect.appendChild(option);
+        createNUnitSelect(data, nInput) {
+            const nUnitSelect = document.createElement("select");
+            nUnitSelect.className = "n-unit-select";
+            const options = ["моль", "ммоль"];
+            for (let i = 0; i < options.length; i++) {
+                const option = document.createElement("option");
+                option.value = options[i];
+                option.text = options[i];
+                if (data.nUnit === "моль" && options[i] === "моль") {
+                    option.selected = true;
+                } else if (data.nUnit === "ммоль" && options[i] === "ммоль") {
+                    option.selected = true;
                 }
-                mCell.appendChild(mUnitSelect);
+                nUnitSelect.appendChild(option);
+            }
 
-                mUnitSelect.addEventListener('change', function (e) {
-                    if (handleMUnitChange(e, mInput, updatedData, true)) {
-                        mInput.value = formatNumber(updatedData.m * 1000);
-                    } else {
-                        mInput.value = formatNumber(updatedData.m);
-                    }
-                    updateColumn(fragmentId, updatedData, tableId, flagReactant, flagChangeMW);
-
-                });
-
-                var nCell = table.rows[3].cells[i];
-                var nInput = document.createElement("input");
-                nInput.type = "text";
-                nInput.className = "n-input";
-                nInput.value = formatNumber(updatedData.n * multiplierUnit(updatedData, false));
-
-                nCell.innerHTML = ''; // Очищаем содержимое ячейки
-                nCell.appendChild(nInput);
-                nInput.addEventListener('blur', function (e) {
-                    if (validateAndSetProperty(e.target, "n", updatedData)) {
-                        ProcessingOtherFieldsForN(e.target.value, updatedData, tableId, flagReactant);
-                    } else {
-                        updatedData.n = "";
-                    }
-                });
-                //console.log("ninput:", nInput.value, "updatedData.n", updatedData.n);
-                var nUnitSelect = document.createElement("select");
-                nUnitSelect.className = "n-unit-select";
-                var options = ["моль", "ммоль"];
-                for (let i = 0; i < options.length; i++) {
-                    var option = document.createElement("option");
-                    option.value = options[i];
-                    option.text = options[i];
-                    if (updatedData.nUnit === "моль" && options[i] === "моль") {
-                        option.selected = true;
-                    } else if (updatedData.nUnit === "ммоль" && options[i] === "ммоль") {
-                        option.selected = true;
-                    }
-                    nUnitSelect.appendChild(option);
+            nUnitSelect.addEventListener('change', (e) => {
+                if (this.handleMUnitChange(e, nInput, data, false)) {
+                    nInput.value = this.formatNumber(data.n / 1000);
+                } else {
+                    nInput.value = this.formatNumber(data.n);
                 }
-                nCell.appendChild(nUnitSelect);
-                nUnitSelect.addEventListener('change', function (e) {
-                    if (handleMUnitChange(e, nInput, updatedData, false)) {
-                        nInput.value = formatNumber(updatedData.n / 1000);
+                this.createOrUpdateColumn(data, false);
+            });
+
+            return nUnitSelect;
+        }
+
+        mCell(table, fragment, flagNew, index) {
+            const mInput = document.createElement("input");
+            mInput.type = "text";
+            mInput.className = "m-input";
+
+            const mRow = table.rows[TABLE_ROWS.M];
+            let mCell;
+            if (flagNew) {
+                mCell = mRow.insertCell(mRow.cells.length);
+                if (this.activeFragment) {  //  проверить как будет работать с переносимыми столбцами TO DO
+                    fragment.m = (fragment.n * fragment.molarMass / 1000);
+                    mInput.value = this.formatNumber(fragment.m * this.multiplierUnit(fragment, true));
+                }
+            } else {
+                mCell = mRow.cells[index];
+                mInput.value = this.formatNumber(fragment.n * fragment.molarMass / 1000 * this.multiplierUnit(fragment, true));
+            }
+
+            mCell.innerHTML = '';
+            mCell.appendChild(mInput);
+
+            mInput.addEventListener('blur', (e) => {
+                if (this.validateProperty(e.target)) {
+                    if (this.checkSimilar(mInput.value, fragment.m * this.multiplierUnit(fragment, true))) {
+                        mInput.value = this.formatNumber(fragment.m * this.multiplierUnit(fragment, true));
                     } else {
-                        nInput.value = formatNumber(updatedData.n);
+                        fragment.m = mInput.value / this.multiplierUnit(fragment, true);
+                        mInput.value = this.formatNumber(mInput.value);
+                        // console.log("ProcessingOtherFieldsForM");
+                        this.ProcessingOtherFieldsForM(e.target.value, fragment);
                     }
-                    updateColumn(fragmentId, updatedData, tableId, flagReactant, flagChangeMW);
+                } else {
+                    fragment.m = "";
+                }
+            });
+
+            const mUnitSelect = this.createMUnitSelect(fragment, mInput);
+            mCell.appendChild(mUnitSelect);
+        }
+
+        createMUnitSelect(data, mInput) {
+            const mUnitSelect = document.createElement("select");
+            mUnitSelect.className = "m-unit-select";
+            const options = ["г", "мг"];
+            for (let i = 0; i < options.length; i++) {
+                const option = document.createElement("option");
+                option.value = options[i];
+                option.text = options[i];
+                if (data.mUnit === "мг" && options[i] === "мг") {
+                    option.selected = true;
+                } else if (data.mUnit === "г" && options[i] === "г") {
+                    option.selected = true;
+                }
+                mUnitSelect.appendChild(option);
+            }
+
+            mUnitSelect.addEventListener('change', (e) => {
+                if (this.handleMUnitChange(e, mInput, data, true)) {
+                    mInput.value = this.formatNumber(data.m * 1000);
+                    // console.log("m = ", data.m);
+                    // console.log("mInput.value = ", this.formatNumber(data.m * 1000));
+                    // console.log("mInput.value = ", mInput.value);
+                } else {
+                    mInput.value = this.formatNumber(data.m);
+                    // console.log("m = ", data.m);
+                    // console.log("mInput.value = ", this.formatNumber(data.m));
+                    // console.log("mInput.value = ", mInput.value);
+                }
+                this.createOrUpdateColumn(data, false);
+            });
+
+            return mUnitSelect;
+        }
+
+
+        handleMUnitChange(e, mInput, fragment, flagM) {
+            var selectedUnit = e.target.value;
+            if (flagM) {
+                if (selectedUnit === "мг") {
+                    fragment.mUnit = "мг";
+                    return true;
+                } else if (selectedUnit === "г") {
+                    fragment.mUnit = "г";
+                    return false;
+                }
+            } else {
+                if (selectedUnit === "моль") {
+                    fragment.nUnit = "моль";
+                    return true;
+                } else if (selectedUnit === "ммоль") {
+                    fragment.nUnit = "ммоль";
+                    return false;
+                }
+            }
+
+        }
+
+        ProcessingOtherFieldsForM(value, fragmentInfo) {
+            var mValue = value / this.multiplierUnit(fragmentInfo, true);
+            var newNvalue = (mValue / fragmentInfo.molarMass * 1000);
+            fragmentInfo.n = newNvalue;
+            fragmentInfo.m = mValue;
+            this.createOrUpdateColumn(fragmentInfo, false);
+
+            if (fragmentInfo.action === true) {
+                this.reactantFragments.forEach((value, key) => {
+                    if (key !== fragmentInfo.fragmentId) {
+                        value.m = (value.molarMass / fragmentInfo.molarMass * fragmentInfo.m * value.equivalent / fragmentInfo.equivalent);
+                        value.n = (value.m / value.molarMass * 1000);
+                        this.createOrUpdateColumn(value, false);
+                    }
                 });
 
-                var eqvCell = table.rows[4].cells[i];
-                var eqvInput = document.createElement("input");
-                eqvInput.type = "text";
-                eqvInput.className = "eqv-input";
-                eqvInput.value = formatNumber(updatedData.equivalent);
-                eqvCell.innerHTML = ''; // Очищаем содержимое ячейки
-                eqvCell.appendChild(eqvInput);
-                var oldValue = eqvInput.value;
-                eqvInput.addEventListener('blur', function (e) {
-                    if (validateAndSetProperty(e.target, "equivalent", updatedData)) {
-                        ProcessingOtherFieldsForEqv(oldValue, updatedData, tableId, flagReactant);
-                    } else {
-                        updatedData.equivalent = 1.00;
-                        updateColumn(updatedData.fragmentId, updatedData, tableId, flagReactant, false);
+                this.productFragments.forEach((value, key) => {
+                    if (key !== fragmentInfo.fragmentId) {
+                        value.m = (value.molarMass / fragmentInfo.molarMass * fragmentInfo.m * value.equivalent / fragmentInfo.equivalent);
+                        value.n = (value.m / value.molarMass * 1000);
+                        this.createOrUpdateColumn(value, false);
+                    }
+                });
+            }
+        }
+
+        ProcessingOtherFieldsForN(value, fragmentInfo) {
+            var nValue = value / this.multiplierUnit(fragmentInfo, false);
+            var newMvalue = (nValue * fragmentInfo.molarMass / 1000);
+            fragmentInfo.n = nValue;
+            fragmentInfo.m = newMvalue;
+            this.createOrUpdateColumn(fragmentInfo, false);
+
+            if (fragmentInfo.action === true) {
+                this.reactantFragments.forEach((value, key) => {
+                    if (key !== fragmentInfo.fragmentId) {
+                        value.n = (value.equivalent / fragmentInfo.equivalent * fragmentInfo.n);
+                        value.m = (value.n * value.molarMass / 1000);
+                        this.createOrUpdateColumn(value, false);
                     }
                 });
 
-                break; // Выйти из цикла, как только ячейка будет обновлена
+                this.productFragments.forEach((value, key) => {
+                    if (key !== fragmentInfo.fragmentId) {
+                        value.n = (value.equivalent / fragmentInfo.equivalent * fragmentInfo.n);
+                        value.m = (value.n * value.molarMass / 1000);
+                        this.createOrUpdateColumn(value, false);
+                    }
+                });
             }
         }
-    }
 
-    function createColumn(fragmentInfo, tableId, flagReactant) {
-        var table = document.getElementById(tableId);
-
-        // console.log("Create mass for", fragmentInfo.fragmentId, "|", fragmentInfo.m);
-        //  убрать потом магические числа
-        var formulaRow = table.rows[0];
-        var mwRow = table.rows[1];
-        var mRow = table.rows[2];
-        var nRow = table.rows[3];
-        var eqvRow = table.rows[4];
-
-        if (flagReactant) {
-            var actionRow = table.rows[5];
-            var uniqeRow = table.rows[6];
-        } else {
-            var uniqeRow = table.rows[5];
-        }
-
-
-        var formulaCell = formulaRow.insertCell(formulaRow.cells.length);
-        formulaCell.innerHTML = fragmentInfo.formula;
-
-        var infoImage = document.getElementById("infoImage");
-
-        var infoButton = document.createElement("button");
-        infoButton.type = "button";
-        infoButton.style.border = "none";
-        infoButton.style.padding = "0";
-        infoButton.style.backgroundColor = "transparent";
-        infoButton.style.marginLeft = "5px";
-
-        var clonedImage = infoImage.cloneNode(true);
-        infoButton.appendChild(clonedImage);
-
-        infoButton.addEventListener("click", function () {
-            var smiles = Kekule.IO.saveFormatData(fragmentInfo.fragment, 'smi');
-            // console.log("smiles", smiles);
-            // console.log("formula", fragmentInfo.formula);
-            openInfoWindowWithChemInfo(smiles, fragmentInfo.formula);
-        });
-
-        formulaCell.appendChild(infoButton);
-
-
-
-        /////////////////////////////////////////////////////////////////////////
-
-        var mwCell = mwRow.insertCell(mwRow.cells.length);
-        mwCell.innerHTML = (fragmentInfo.molarMass).toFixed(2);
-
-        let flagFullnes = false;
-        var resFullness = checkForFullness();
-        if (resFullness) {
-            var nValueBase = resFullness.n;
-            var eqvValueBase = resFullness.equivalent;
-            flagFullnes = true;
-        }
-
-        /////////////////////////////////////////////////////////////////////////
-
-        var nCell = nRow.insertCell(nRow.cells.length);
-        var nInput = document.createElement("input");
-        nInput.type = "text";
-        nInput.className = "n-input";
-        if (flagFullnes) {
-            fragmentInfo.n = (nValueBase / eqvValueBase);
-            nInput.value = formatNumber(fragmentInfo.n * multiplierUnit(fragmentInfo, false));
-        } else {
-            nInput.value = "";
-        }
-        nCell.appendChild(nInput);
-        nInput.addEventListener('blur', function (e) {
-            if (validateAndSetProperty(e.target, "n", fragmentInfo)) {
-                ProcessingOtherFieldsForN(e.target.value, fragmentInfo, tableId, flagReactant);
-            } else {
-                fragmentInfo.n = "";
+        actionCell(table, fragment, flagNew) {
+            if (!flagNew) {
+                return;
             }
-        });
+            const actionRow = table.rows[TABLE_ROWS.ACTION];
+            const actionCell = actionRow.insertCell(actionRow.cells.length);
 
-        var nUnitSelect = document.createElement("select");
-        nUnitSelect.className = "n-unit-select";
-        var options = ["моль", "ммоль"];
-        for (let i = 0; i < options.length; i++) {
-            var option = document.createElement("option");
-            option.value = options[i];
-            option.text = options[i];
-            if (fragmentInfo.nUnit === "моль" && options[i] === "моль") {
-                option.selected = true;
-            } else if (fragmentInfo.nUnit === "ммоль" && options[i] === "ммоль") {
-                option.selected = true;
-            }
-            nUnitSelect.appendChild(option);
-        }
-        nCell.appendChild(nUnitSelect);
-        nUnitSelect.addEventListener('change', function (e) {
-            if (handleMUnitChange(e, nInput, fragmentInfo, false)) {
-                nInput.value = formatNumber(fragmentInfo.n / 1000);
-            } else {
-                nInput.value = formatNumber(fragmentInfo.n);
-            }
-            updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
-        });
 
-        /////////////////////////////////////////////////////////////////////////
-
-        var mCell = mRow.insertCell(mRow.cells.length);
-        var mInput = document.createElement("input");
-        mInput.type = "text";
-        mInput.className = "m-input";
-        if (flagFullnes) {
-            fragmentInfo.m = (fragmentInfo.n * fragmentInfo.molarMass / 1000);
-            mInput.value = formatNumber(fragmentInfo.m * multiplierUnit(fragmentInfo, true));
-        } else {
-            mInput.value = "";
-        }
-        mCell.appendChild(mInput);
-        mInput.addEventListener('blur', function (e) {
-            if (validateAndSetProperty(e.target, "m", fragmentInfo)) {
-                ProcessingOtherFieldsForM(e.target.value, fragmentInfo, tableId, flagReactant);
-            } else {
-                fragmentInfo.m = "";
-            }
-        });
-
-        var mUnitSelect = document.createElement("select");
-        mUnitSelect.className = "m-unit-select";
-        var options = ["г", "мг"];
-        for (let i = 0; i < options.length; i++) {
-            var option = document.createElement("option");
-            option.value = options[i];
-            option.text = options[i];
-            if (fragmentInfo.mUnit === "мг" && options[i] === "мг") {
-                option.selected = true;
-            } else if (fragmentInfo.mUnit === "г" && options[i] === "г") {
-                option.selected = true;
-            }
-            mUnitSelect.appendChild(option);
-        }
-        mCell.appendChild(mUnitSelect);
-        mUnitSelect.addEventListener('change', function (e) {
-            if (handleMUnitChange(e, mInput, fragmentInfo, true)) {
-                mInput.value = formatNumber(fragmentInfo.m * 1000);
-            } else {
-                mInput.value = formatNumber(fragmentInfo.m);
-            }
-            updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
-        });
-
-        /////////////////////////////////////////////////////////////////////////
-
-        var eqvCell = eqvRow.insertCell(eqvRow.cells.length);
-        var eqvInput = document.createElement("input");
-        eqvInput.type = "text";
-        eqvInput.className = "eqv-input";
-        eqvInput.value = formatNumber(fragmentInfo.equivalent);
-        eqvCell.appendChild(eqvInput);
-        var oldValue = eqvInput.value;
-        eqvInput.addEventListener('blur', function (e) {
-            if (validateAndSetProperty(e.target, "equivalent", fragmentInfo)) {
-                ProcessingOtherFieldsForEqv(oldValue, fragmentInfo, tableId, flagReactant);
-            } else {
-                fragmentInfo.equivalent = 1.00;
-            }
-        });
-
-        /////////////////////////////////////////////////////////////////////////
-
-        if (flagReactant) {
-
-            var actionCell = actionRow.insertCell(actionRow.cells.length);
-            var radioInput = document.createElement("input");
+            const radioInput = document.createElement("input");
             radioInput.type = 'radio';
             radioInput.name = 'action';
             radioInput.className = 'action';
 
-            if (fragmentInfo.action == 1) {
+            if (fragment.action == true) {
                 radioInput.checked = true;
             }
 
             radioInput.addEventListener('change', () => {
-                fragmentInfo.action = 1;
-                resetAllActionsExcept(fragmentInfo.fragmentId);
-                if (fragmentInfo.n !== "" && fragmentInfo.m !== "") {
-                    updateEmptyFields(reactantData, fragmentInfo, "reactantTable", true);
-                    updateEmptyFields(productData, fragmentInfo, "productTable", false);
+                // console.log("action change:", fragment.fragmentId);
+                this.activeFragment.action = false;
+                fragment.action = true;
+                this.activeFragment = fragment;
+                this.createOrUpdateColumn(fragment, false);
+                // resetAllActionsExcept(fragment.fragmentId);
+                if (fragment.n !== "" && fragment.m !== "") {
+                    this.updateEmptyFields(fragment, true);
+                    this.updateEmptyFields(fragment, false);
                 }
+
+                this.productFragments.forEach((value, key) => {
+                    this.createOrUpdateColumn(value, false);
+                });
+
             });
 
             actionCell.appendChild(radioInput);
-
         }
 
-        /////////////////////////////////////////////////////////////////////////
-
-        var uniqeCell = uniqeRow.insertCell(uniqeRow.cells.length);
-        uniqeCell.innerHTML = fragmentInfo.fragmentId;
-    }
-
-    function handleMUnitChange(e, mInput, fragment, flagM) {
-        var selectedUnit = e.target.value;
-        if (flagM) {
-            if (selectedUnit === "мг") {
-                fragment.mUnit = "мг";
-                return true;
-            } else if (selectedUnit === "г") {
-                fragment.mUnit = "г";
-                return false;
-            }
-        } else {
-            if (selectedUnit === "моль") {
-                fragment.nUnit = "моль";
-                return true;
-            } else if (selectedUnit === "ммоль") {
-                fragment.nUnit = "ммоль";
-                return false;
-            }
-        }
-
-    }
-
-
-
-    function updateEmptyFields(data, actvieFragment, tableId, flagReactant) {
-        for (var key in data) {
-            var element = data[key];
-            if (element.action === 0) {
-                if (element.n === "" && element.m === "") {
-                    element.n = actvieFragment.n * element.equivalent / actvieFragment.equivalent;
-                    element.m = (element.n * element.molarMass / 1000);
-                    updateColumn(key, element, tableId, flagReactant, false);
-                } else if (element.n === "") {
-                    element.n = (element.m / element.molarMass * 1000);
-                    updateColumn(key, element, tableId, flagReactant, false);
-                } else if (element.m === "") {
-                    element.m = (element.n * element.molarMass / 1000);
-                    updateColumn(key, element, tableId, flagReactant, false);
+        updateEmptyFields(activeFragment, flagReactant) {
+            const data = flagReactant ? this.reactantFragments : this.productFragments;
+            for (var [key, element] of data.entries()) {
+                if (element.action === false) {
+                    if (element.n === "" && element.m === "") {
+                        element.n = activeFragment.n * element.equivalent / activeFragment.equivalent;
+                        element.m = (element.n * element.molarMass / 1000);
+                        this.createOrUpdateColumn(element, false);
+                    } else if (element.n === "") {
+                        element.n = (element.m / element.molarMass * 1000);
+                        this.createOrUpdateColumn(element, false);
+                    } else if (element.m === "") {
+                        element.m = (element.n * element.molarMass / 1000);
+                        this.createOrUpdateColumn(element, false);
+                    }
                 }
             }
         }
-    }
 
-    function checkForFullness() {
-        var reactionElementWithAction = Object.values(reactantData).find(elem => elem.action === 1);
-        if (reactionElementWithAction && reactionElementWithAction.n !== "" && reactionElementWithAction.m !== "") {
-            return {
-                n: reactionElementWithAction.n,
-                equivalent: reactionElementWithAction.equivalent
-            };
-        } else {
-            for (var key in productData) {
-                var productElement = productData[key];
-                if (productElement.n !== "" && productElement.m !== "") {
-                    return {
-                        n: productElement.n,
-                        equivalent: productElement.equivalent
-                    };
-                }
-            }
-            return null;
-        }
-    }
-
-    function resetAllActionsExcept(fragmentId) {
-        var keys = Object.keys(reactantData);
-        for (var i = 0; i < keys.length; i++) {
-            var elem = reactantData[keys[i]];
-
-            if (elem.fragmentId !== fragmentId) {
-                elem.action = 0;
-            }
-            // console.log(elem.fragmentId, elem.action);
-        }
-    }
-
-
-
-    function formatNumber(value) {
-        if (/^\d+(\.\d+)?$/.test(value)) {
-            return parseFloat(value).toFixed(2);
-        } else {
-            return value;
-        }
-    }
-
-    function isNumber(value) {
-        return /^\d+(\.\d+)?$/.test(value);
-    }
-
-    function validateAndSetProperty(inputElement, property, fragmentInfo) {
-        var value = inputElement.value;
-        inputElement.value = value;
-        if (isNumber(value)) {
-            fragmentInfo[property] = value;
-            // console.log("valid true");
-            return true;
-        } else {
-            // console.log("valid false");
-            inputElement.style.color = 'red';
-            return false;
-        }
-    }
-
-    function multiplierUnit(fragment, flagM) {
-        if (flagM) {
-            if (fragment.mUnit === "мг") {
-                return 1000;
-            }
-            return 1;
-        } else {
-            if (fragment.nUnit === "моль") {
-                return 0.001;
-            }
-            return 1;
-        }
-    }
-
-    function ProcessingOtherFieldsForM(value, fragmentInfo, tableId, flagReactant) {
-        var mValue = value / multiplierUnit(fragmentInfo, true);
-        var newNvalue = (mValue / fragmentInfo.molarMass * 1000);
-        fragmentInfo.n = newNvalue;
-        fragmentInfo.m = mValue;
-        updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
-
-        if (!(flagReactant && fragmentInfo.action === 0)) {
-
-            for (var key in reactantData) {
-                if (key !== fragmentInfo.fragmentId) {
-                    reactantData[key].m = (reactantData[key].molarMass / fragmentInfo.molarMass * fragmentInfo.m * reactantData[key].equivalent / fragmentInfo.equivalent);
-                    reactantData[key].n = (reactantData[key].m / reactantData[key].molarMass * 1000);
-                    updateColumn(key, reactantData[key], "reactantTable", true, false);
-                }
-            }
-            for (var key in productData) {
-                if (key !== fragmentInfo.fragmentId) {
-                    productData[key].m = (productData[key].molarMass / fragmentInfo.molarMass * fragmentInfo.m * productData[key].equivalent / fragmentInfo.equivalent);
-                    productData[key].n = (productData[key].m / productData[key].molarMass * 1000);
-                    updateColumn(key, productData[key], "productTable", false, false);
-                }
-            }
-        }
-    }
-
-    function ProcessingOtherFieldsForN(value, fragmentInfo, tableId, flagReactant) {
-
-        var nValue = value / multiplierUnit(fragmentInfo, false);
-        console.log("ProcessingOtherFieldsForNNNN", nValue);
-        var newMvalue = (nValue * fragmentInfo.molarMass / 1000);
-        fragmentInfo.n = nValue;
-        fragmentInfo.m = newMvalue;
-        updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
-
-        if (!(flagReactant && fragmentInfo.action === 0)) {
-
-            for (var key in reactantData) {
-                if (key !== fragmentInfo.fragmentId) {
-                    reactantData[key].n = (reactantData[key].equivalent / fragmentInfo.equivalent * fragmentInfo.n);
-                    reactantData[key].m = (reactantData[key].n * reactantData[key].molarMass / 1000);
-                    updateColumn(key, reactantData[key], "reactantTable", true, false);
-                }
-            }
-            for (var key in productData) {
-                if (key !== fragmentInfo.fragmentId) {
-                    productData[key].n = (productData[key].equivalent / fragmentInfo.equivalent * fragmentInfo.n);
-                    productData[key].m = (productData[key].n * productData[key].molarMass / 1000);
-                    updateColumn(key, productData[key], "productTable", false, false);
-                }
-            }
-
-        }
-    }
-
-    function ProcessingOtherFieldsForEqv(oldValue, fragmentInfo, tableId, flagReactant) {
-        if (flagReactant && fragmentInfo.action === 1) {
-            var multiplier = fragmentInfo.equivalent / oldValue;
-            updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
-            for (var key in reactantData) {
-                if (key !== fragmentInfo.fragmentId) {
-                    // console.log("multiplier", multiplier);
-                    reactantData[key].m /= multiplier;
-                    reactantData[key].n /= multiplier;
-                    updateColumn(key, reactantData[key], tableId, true, false);
-                }
-            }
-            for (var key in productData) {
-                // console.log("multiplier", multiplier);
-                productData[key].m /= multiplier;
-                productData[key].n /= multiplier;
-                updateColumn(key, productData[key], "productTable", false, false);
-            }
-        } else {
-            var multiplier = fragmentInfo.equivalent / oldValue;
-            fragmentInfo.m *= multiplier;
-            fragmentInfo.n *= multiplier;
-            updateColumn(fragmentInfo.fragmentId, fragmentInfo, tableId, flagReactant, false);
-        }
-    }
-
-    function getComposer() {
-        return Kekule.Widget.getWidgetById('composer');
-    }
-
-
-    async function getChemInfoFromServer(smiles) {
-        try {
-            const response = await fetch(`/api/pubchem/get_cas/${encodeURIComponent(smiles)}`);
-
-            if (!response.ok) {
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-                const casNumber = data.casNumber;
-                const firstSynonym = data.firstSynonym;
-                const imageDataUrl = data.image;
-
-                return { casNumber, firstSynonym, imageDataUrl };
+        eqvCell(table, fragment, flagNew, index) {
+            const eqvRow = table.rows[TABLE_ROWS.EQV];
+            let eqvCell;
+            if (flagNew) {
+                eqvCell = eqvRow.insertCell(eqvRow.cells.length);
             } else {
-                return null;
+                eqvCell = eqvRow.cells[index];
             }
-        } catch (error) {
-            return null;
-        }
-    }
-   
-    async function init() {
 
-        localStorage.removeItem('xCoordinateArrow');
-        var composer = getComposer();
-        composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
+            const eqvInput = document.createElement("input");
+            eqvInput.type = "text";
+            eqvInput.className = "eqv-input";
 
-        await getfile();
-
-        composer.getEditor().on('operChange', handleOperationChangeOrUndo);
-        composer.getEditor().on('operUndo', handleOperationChangeOrUndo);
-        composer.getEditor().on('operRedo', handleOperationChangeOrUndo);
-
-        var newDocumentButton = document.querySelector('.K-Chem-NewDoc');
-
-        newDocumentButton.addEventListener('click', removeAllColumnsExceptFirst);
-
-    }
-
-    async function handleOperationChangeOrUndo(e) {
-        var composer = getComposer();
-        var chemObj = composer.getChemObj();
-
-        var arrows = composer.exportObjs(Kekule.Glyph.ReactionArrow);
-        var xOffset = 1.2;
-
-        if ((arrows.length > 0 && !localStorage.getItem('xCoordinateArrow')) ||
-            (arrows.length > 0 && arrows[0].__$__k__p__coord2D.x + xOffset !== parseFloat(localStorage.getItem('xCoordinateArrow')))) {
-            var xCoordinateArrow = arrows[0].__$__k__p__coord2D.x + xOffset;
-            localStorage.setItem('xCoordinateArrow', xCoordinateArrow);
-            composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
-        } else if (!(arrows.length > 0)) {
-            if (document.querySelector('.K-Chem-ArrowLineIaController') == null) {
-                composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
-                localStorage.removeItem('xCoordinateArrow');
-            }
-        }
-
-        var fragments = Kekule.ChemStructureUtils.getAllStructFragments(chemObj, true);
-
-        if (fragments.length == 0) {
-            removeAllColumnsExceptFirst();
-        } else {
-            var observedFragmentIdsReactant = {};
-            var observedFragmentIdsProduct = {};
-
-            for (var i = 0; i < fragments.length; i++) {
-                var fragment = fragments[i];
-                var fragmentId = fragment.__$__k__p__id;
-
-
-                if (fragment && fragment.__$__k__p__coord2D) {
-                    var node = fragment.getNodeAt(0);
-                    var xCoordinateAtom = fragment.__$__k__p__coord2D.x;
-                } else if (fragment && !fragment.__$__k__p__coord2D) {
-                    var node = fragment.getNodeAt(0);
-                    var xCoordinateAtom = node.__$__k__p__coord2D.x;
-                }
-
-                var xCoordinateArrow = localStorage.getItem('xCoordinateArrow') || 0;
-                var flagReactant = true;
-
-                if (xCoordinateArrow === 0 || (xCoordinateArrow !== 0 && xCoordinateAtom < xCoordinateArrow)) {
-                    observedFragmentIdsReactant[fragmentId] = true;
-                    await processFragment(reactantData, fragments, fragment, fragmentId, "reactantTable", flagReactant);
+            if (fragment.flagReactant === true || fragment.action === true) {
+                // Если фрагмент является реагентом, вводится эквивалент
+                eqvInput.value = this.formatNumber(fragment.equivalent);
+                const oldValue = fragment.equivalent;
+                eqvInput.addEventListener('blur', (e) => {
+                    if (this.validateProperty(e.target)) {
+                        if (this.checkSimilar(eqvInput.value, fragment.equivalent)) {
+                            eqvInput.value = this.formatNumber(fragment.equivalent);
+                        } else {
+                            fragment.equivalent = this.formatNumber(eqvInput.value);
+                            eqvInput.value = this.formatNumber(eqvInput.value);
+                            console.log("ProcessingOtherFieldsForEqv");
+                            this.ProcessingOtherFieldsForEqv(oldValue, fragment);
+                        }
+                    } else {
+                        fragment.equivalent = 1.00;
+                        this.createOrUpdateColumn(fragment, false);
+                    }
+                });
+            } else {
+                // Если фрагмент не является реагентом, вводится выход реакции
+                const result = parseFloat((fragment.m / (this.activeFragment.n / 1000.0 * fragment.molarMass)) * 100.0);
+                // мб this.activeFragment.n делить еще на эквивалент
+                if (!isNaN(result) && isFinite(result)) {
+                    eqvInput.value = result.toFixed(2);
                 } else {
-                    observedFragmentIdsProduct[fragmentId] = true;
-                    await processFragment(productData, fragments, fragment, fragmentId, "productTable", !flagReactant);
+                    eqvInput.value = '';
+                }
+
+                if (fragment.action) {  //  TO DO
+                    console.log("else if fragment.action");
+                    eqvInput.disabled = false; // Делаем поле только для вывода информации
+                } else {
+                    console.log("else if fragment.action else");
+                    eqvInput.disabled = true;
                 }
             }
 
-            deleteFragment(reactantData, "reactantTable", observedFragmentIdsReactant, flagReactant);
-            deleteFragment(productData, "productTable", observedFragmentIdsProduct, !flagReactant);
+            eqvCell.innerHTML = '';
+            eqvCell.appendChild(eqvInput);
+
         }
 
-        await sendDataToServerAsync();
+        ProcessingOtherFieldsForEqv(oldValue, fragmentInfo) {
+            if (fragmentInfo.action === true) {
+                var multiplier = fragmentInfo.equivalent / oldValue;
+                this.createOrUpdateColumn(fragmentInfo, false);
 
-        // console.log('Данные успешно отправлены на сервер.');
+
+                this.reactantFragments.forEach((value, key) => {
+                    if (key !== fragmentInfo.fragmentId) {
+                        value.m /= multiplier;
+                        value.n /= multiplier;
+                        this.createOrUpdateColumn(value, false);
+                    }
+                });
+
+                this.productFragments.forEach((value, key) => {
+                    if (key !== fragmentInfo.fragmentId) {
+                        value.m /= multiplier;
+                        value.n /= multiplier;
+                        this.createOrUpdateColumn(value, false);
+                    }
+                });
+            }
+            if (fragmentInfo.flagReactant && fragmentInfo.action === false) {
+                var multiplier = fragmentInfo.equivalent / oldValue;
+                fragmentInfo.m *= multiplier;
+                fragmentInfo.n *= multiplier;
+                this.createOrUpdateColumn(fragmentInfo, false);
+            }
+        }
+
+
+        checkSimilar(inputValue, value) {
+            // console.log("checkSimilar", "1:", inputValue, "2:", value);
+            if (parseFloat(inputValue) === parseFloat(value)) {
+                // console.log("true");
+                return true;
+            } else {
+                // console.log("false");
+                return false;
+            }
+        }
+
+        formatNumber(value) {
+            if (/^\d+(\.\d+)?$/.test(value)) {
+                return parseFloat(value).toFixed(2);
+            } else {
+                return value;
+            }
+        }
+
+        multiplierUnit(fragment, flagM) {
+            if (flagM) {
+                if (fragment.mUnit === "мг") {
+                    return 1000;
+                }
+                return 1;
+            } else {
+                if (fragment.nUnit === "моль") {
+                    return 0.001;
+                }
+                return 1;
+            }
+        }
+
+        validateProperty(inputElement) {
+            var value = inputElement.value;
+            if (this.isNumber(value)) {
+                inputElement.style.color = 'black';
+                return true;
+            } else {
+                inputElement.style.color = 'red';
+                return false;
+            }
+        }
+
+        isNumber(value) {
+            return /^\d+(\.\d+)?$/.test(value);
+        }
+
+        createOrUpdateColumn(fragment, flagNew) {
+            // console.log("in createOrUpdateColumn");
+            const table = fragment.flagReactant ? this.tableReactant : this.tableProduct;
+            let rowOffset = TABLE_ROWS.UNIQUE;
+
+            if (flagNew) {
+                // console.log("CREATE", fragment.fragmentId);
+                this.formulaCell(fragment, table, fragment.formula, flagNew);
+                this.mwCell(table, fragment.molarMass, flagNew);
+                this.nCell(table, fragment, flagNew);
+                this.mCell(table, fragment, flagNew);
+                this.actionCell(table, fragment, flagNew);
+                this.eqvCell(table, fragment, flagNew);
+
+                const uniqueRow = table.rows[TABLE_ROWS.UNIQUE];
+
+                let uniqueCell = uniqueRow.insertCell(uniqueRow.cells.length);
+                uniqueCell.innerHTML = fragment.fragmentId;
+            } else {
+                for (let i = 1; i < table.rows[TABLE_ROWS.FORMULA].cells.length; i++) {
+                    const cell = table.rows[rowOffset].cells[i];
+                    const cellFragmentId = cell.innerHTML;
+
+                    if (cellFragmentId === fragment.fragmentId) {
+                        // console.log("UPDATE", fragment.fragmentId);
+                        // console.log("cellFragmentId=", cellFragmentId, "fragment.fragmentId=", fragment.fragmentId);
+                        this.formulaCell(fragment, table, fragment.formula, flagNew, i);
+                        this.mwCell(table, fragment.molarMass, flagNew, i);
+                        this.nCell(table, fragment, flagNew, i);
+                        this.mCell(table, fragment, flagNew, i);
+                        this.actionCell(table, fragment, flagNew);
+                        this.eqvCell(table, fragment, flagNew, i);
+                        break;
+                    }
+
+                }
+            }
+        }
     }
 
+    class Fragment {
+        constructor(id) {
+            this.fragment = null;
+            this.fragmentId = id;
 
-    function deleteFragment(fragmentData, tableId, observedFragmentIds, flagReactant) {
-        var flagSetAction = false;
-        var columnsToDelete = [];
+            // Публичные свойства класса
+            this.formula = "";
+            this.molarMass = "";
+            this.m = "";
+            this.mUnit = "г";
+            this.n = "";
+            this.nUnit = "ммоль";
+            this.equivalent = 1.00;
+            this.action = false;
+        }
 
-        for (var existingFragmentId in fragmentData) {
-            if (!observedFragmentIds[existingFragmentId]) {
-                columnsToDelete.push(existingFragmentId);
+        processFragment() {
+            if (this.fragment.getNodeCount() === 0) {
+                console.log(this.fragment.calcFormula().getText());
+                return;
+            }
+
+            const molarMass = this.calculateMolarMass();
+
+            const currMap = this.flagReactant ? this.table.reactantFragments : this.table.productFragments;
+            const formula = this.fragment.calcFormula();
+            // var node = this.fragment.getNodeAt(0);
+            // if (this.fragment.getNodeAt(0) && node instanceof Kekule.SubGroup) {
+                // console.log("fragment.getNodeAt(0).calcFormula();", this.fragment.getNodeAt(0).calcFormula());
+            // }
+            
+            // console.log("this.fragment.calcFormula();", this.fragment.calcFormula());
+            // console.log("formula.getText();", formula.getText());
+
+            const formulaText = this.parseFormula(formula.getText());
+
+
+            const tableId = this.flagReactant ? "reactantTable" : "productTable";
+
+            if (!currMap.has(this.fragmentId)) {
+                this.formula = formulaText;
+                this.molarMass = molarMass;
+                if (this.table.reactantFragments.size + this.table.productFragments.size === 0) {
+                    this.action = true;
+                    this.table.activeFragment = this;
+                }
+                currMap.set(this.fragmentId, this);
+                this.table.createOrUpdateColumn(this, true);
+
+            } else if (molarMass !== currMap.get(this.fragmentId).molarMass) {
+                this.formula = formulaText;
+                this.molarMass = molarMass;
+                this.table.createOrUpdateColumn(currMap.get(this.fragmentId), false);
             }
         }
-        if (columnsToDelete.length > 0) {
-            var tmp = 5;  //  магические числа
-            if (flagReactant) {
-                tmp = 6;
+
+        calculateMolarMass() {
+            let totalMass = 0;
+            for (let i = 0; i < this.fragment.getNodeCount(); ++i) {
+                totalMass += this.processNode(this.fragment.getNodeAt(i));
+                // if (this.fragment.getNodeAt(i) && this.fragment.getNodeAt(i).calcFormula()) {
+                    // console.log("i=", i, "node=", this.fragment.getNodeAt(i));
+                    // console.log("form=", this.fragment.getNodeAt(i).calcFormula().getText());
+                // }
             }
-            // Удаляем столбцы из таблицы в обратном порядке
-            var table = document.getElementById(tableId);
+            return totalMass;
+        }
 
-            for (var i = columnsToDelete.length - 1; i >= 0; i--) {
-                var fragmentId = columnsToDelete[i];
-
-                for (var j = 0; j < table.rows[tmp].cells.length; j++) {
-                    if (table.rows[tmp].cells[j].innerHTML === fragmentId) {
-                        for (var k = 0; k < table.rows.length; k++) {
-                            table.rows[k].deleteCell(j);
+        processNode(node) {
+            let totalMass = 0;
+            if (node instanceof Kekule.Atom || node instanceof Kekule.SubGroup) {
+                totalMass += this.calculateFragmentMass(node);
+                // console.log("", "i=", i, "form=", node.calcFormula().getText());
+                if (node instanceof Kekule.SubGroup) {
+                    for (let i = 0; i < node.getNodeCount(); ++i) {
+                        totalMass += this.processNode(node.getNodeAt(i)); // Рекурсивный вызов для обработки внутренних узлов
+                        // console.log("node=", node.getNodeAt(i), "i=", i);
+                        // console.log("form=", node.getNodeAt(i).calcFormula().getText(), "i=", i);
+                        if (i === 0) {
+                            console.log("form=", node.calcFormula().getText());
                         }
                     }
                 }
+            }
+            return totalMass;
+        }
 
-                if (flagReactant && Object.keys(fragmentData).length > 1 && fragmentData[fragmentId].action === 1) {
-                    flagSetAction = true;
+
+        calculateFragmentMass(node) {
+            let mass = 0;
+            if (node instanceof Kekule.Atom) {
+                if (node.getAtomicMass) {
+                    mass += node.getAtomicMass();
                 }
-
-                delete fragmentData[fragmentId];
+                if (node.getImplicitHydrogenCount) {
+                    const hcount = node.getImplicitHydrogenCount() || 0;
+                    mass += hcount * 1.01;
+                }
             }
+            return mass;
         }
 
-        if (flagReactant && flagSetAction) {
-            var fragmentIds = Object.keys(fragmentData);
-            var firstFragmentId = fragmentIds[0];
-            fragmentData[firstFragmentId].action = 1;
-
-            var radioButtons = document.getElementsByClassName('action');
-            radioButtons[0].checked = true;
-        }
-
-    }
-
-
-    async function processFragment(fragmentData, fragments, fragment, fragmentId, tableId, flagReactant) {
-        var totalMass = 0;
-
-        for (var i = 0, l = fragment.getNodeCount(); i < l; ++i) {
-            var node = fragment.getNodeAt(i);
-
-            if (node.getAtomicMass) {
-                totalMass += node.getAtomicMass();
+        parseFormula(inputString) {
+            inputString = inputString.trim();
+            const match = inputString.match(/([+-])$/);
+            if (match) {
+                inputString = inputString.slice(0, -2);
             }
-
-            if (node.getImplicitHydrogenCount) {
-                var hcount = node.getImplicitHydrogenCount() || 0;
-                totalMass += hcount * 1.01;
-            }
-        }
-
-        var molarMass = totalMass;
-
-        if (!fragmentData[fragmentId]) {
-            var formula = fragment.calcFormula();
-            var formulaText = parseFormula(formula.getText());
-
-            fragmentData[fragmentId] = {
-                fragment: fragment,
-                fragmentId: fragmentId,
-                formula: formulaText,
-                molarMass: molarMass,
-                m: "",
-                mUnit: "г",
-                n: "",
-                nUnit: "ммоль",
-                equivalent: 1.00,
-                action: 0
-            };
-
-            if (Object.keys(fragmentData).length == 1 && flagReactant) {
-                fragmentData[fragmentId].action = 1;
-            }
-
-            createColumn(fragmentData[fragmentId], tableId, flagReactant);
-        } else if (fragmentData[fragmentId].formula !== parseFormula((fragment.calcFormula()).getText())) {
-            var formula = fragment.calcFormula();
-            var formulaText = parseFormula(formula.getText());
-
-            fragmentData[fragmentId].formula = formulaText;
-            fragmentData[fragmentId].molarMass = molarMass;
-            updateColumn(fragmentId, fragmentData[fragmentId], tableId, flagReactant, true);
-        }
-    }
-
-
-    function parseFormula(inputString) {
-        inputString = inputString.trim();
-        const match = inputString.match(/([+-])$/);
-        if (match) {
-            inputString = inputString.slice(0, -2);
-        }
-        var result = "";
-        var sign = '';
-        var num = 1;
-        for (var i = 0; i < inputString.length; i++) {
-            if (inputString[i] !== ' ') {
-                result += inputString[i];
-            } else {
-                if (i + 1 < inputString.length) {
-                    if (!isNaN(inputString[i + 1])) {
-                        num = 0;
-                        while (i + 1 < inputString.length && !isNaN(inputString[i + 1])) {
-                            num = num * 10 + parseInt(inputString[i + 1]);
+            var result = "";
+            var sign = '';
+            var num = 1;
+            for (var i = 0; i < inputString.length; i++) {
+                if (inputString[i] !== ' ') {
+                    result += inputString[i];
+                } else {
+                    if (i + 1 < inputString.length) {
+                        if (!isNaN(inputString[i + 1])) {
+                            num = 0;
+                            while (i + 1 < inputString.length && !isNaN(inputString[i + 1])) {
+                                num = num * 10 + parseInt(inputString[i + 1]);
+                                i++;
+                            }
+                        }
+                        if (inputString[i + 1] === '+') {
+                            sign = '+';
+                            i++;
+                        } else if (inputString[i + 1] === '-') {
+                            sign = '-';
                             i++;
                         }
                     }
-                    if (inputString[i + 1] === '+') {
-                        sign = '+';
-                        i++;
-                    } else if (inputString[i + 1] === '-') {
-                        sign = '-';
-                        i++;
-                    }
+                }
+            }
+            if (sign) {
+                const chars = sign.repeat(num);
+                result += chars;
+            }
+            return result;
+        }
+    }
+
+
+
+
+    class Composer {
+        constructor() {
+            this.table = new Table();
+
+            this.observedReactant = new Set();
+            this.observedProduct = new Set();
+
+            this.firstRun = true;
+
+            
+            this.initialize();
+            
+        }
+
+        async initialize() {
+
+            if (this.firstRun) {
+                await this.addRepoItemAndUpdate();
+            }
+
+            this.firstRun = false;
+
+           
+
+            // this.composer = Kekule.Widget.getWidgetById('composer');
+            if (!targetComposer) {
+                targetComposer = new Kekule.Editor.Composer(document.getElementById('composer'));
+            }
+            
+            this.composer = targetComposer;
+            this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
+
+            this.removeAllColumnsExceptFirst();
+            await this.getfile();
+
+            this.composer.getEditor().on('operChange', this.eventHandler.bind(this));
+            this.composer.getEditor().on('operUndo', this.eventHandler.bind(this));
+            this.composer.getEditor().on('operRedo', this.eventHandler.bind(this));
+
+            const newDocumentButton = document.querySelector('.K-Chem-NewDoc');
+
+            newDocumentButton.addEventListener('click', this.removeAllColumnsExceptFirst.bind(this));
+        }
+
+        async getfile() {
+            let id = @ViewBag.Id;
+            try {
+                let data = await $.ajax({
+                    type: 'GET',
+                    url: '/chemeditor/get_file/' + id,
+                    contentType: 'application/json; charset=utf-8'
+                });
+                //console.log(data);
+                this.displayData(data);
+            } catch (error) {
+                console.error('Произошла ошибка при получении данных химического редактора:', error);
+            }
+        }
+
+        displayData(data) {
+            if (data.chemDocumentData !== "") {
+                //console.log("chemDocumentData:", data.chemDocumentData);
+                let composer = this.composer;
+                let chemData = Kekule.IO.loadFormatData(data.chemDocumentData, 'Kekule-JSON');
+                composer.setChemObj(chemData);
+                //  null
+                if (data.XCoordinateArrow !== undefined && (!(Math.abs(data.XCoordinateArrow + 1.0) < 0.1))) {
+                    this.xCoordinateArrow = data.xCoordinateArrow;
+                    this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
                 }
 
+                // Очищаем текущие данные
+                this.table.reactantFragments.clear();
+                this.table.productFragments.clear();
+
+                //console.log(data);
+               
+                if (data && data.reactantData) {
+                    data.reactantData.forEach(reactant => {                        
+                        const fragment = new Fragment(reactant.fragmentId);
+                        Object.assign(fragment, reactant); // Копируем свойства из reactant в fragment
+                        fragment.table = this.table;
+                        fragment.flagReactant = true;
+                        this.table.reactantFragments.set(reactant.fragmentId, fragment);
+                        if (fragment.action === true) {
+                            this.table.activeFragment = fragment;
+                        }
+                        fragment.table.createOrUpdateColumn(fragment, true);
+                    });
+                }
+                if (data && data.productData) {
+                    data.productData.forEach(product => {
+                        const fragment = new Fragment(product.fragmentId);
+                        Object.assign(fragment, product); // Копируем свойства из reactant в fragment
+                        fragment.table = this.table;
+                        fragment.flagReactant = false;
+                        this.table.productFragments.set(product.fragmentId, fragment);
+                        if (fragment.action === true) {
+                            this.table.activeFragment = fragment;
+                        }
+                        fragment.table.createOrUpdateColumn(fragment, true);
+                    });
+                }
+
+                this.eventHandler();
+
+                this.table.printFragmentIds();
             }
         }
-        if (sign) {
-            const chars = sign.repeat(num);
-            result += chars;
-        }
 
-        return result;
-    }
+        async sendDataToServerAsync() {
+            console.log("sendDataToServerAsync");
+            try {
+                let chemDocumentData = this.generateChemDocumentData();
 
-    function removeAllColumnsExceptFirst() {
-        var composer = getComposer();
-        localStorage.clear();
-        composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
-        var table = document.getElementById("reactantTable");
-        for (var i = table.rows[0].cells.length - 1; i > 0; i--) {
-            for (var j = 0; j < table.rows.length; j++) {
-                table.rows[j].deleteCell(i);
-            }
-        }
-        reactantData = {};
-        var table = document.getElementById("productTable");
-        for (var i = table.rows[0].cells.length - 1; i > 0; i--) {
-            for (var j = 0; j < table.rows.length; j++) {
-                table.rows[j].deleteCell(i);
-            }
-        }
-        productData = {};
-    }
+                let XArrow = this.xCoordinateArrow || -1.0;
 
-    async function sendDataToServerAsync() {
-        try {
-            let chemDocumentData = generateChemDocumentData();
-            let chemNumbersData = generateChemNumbersData();
 
-            let dataReactant = chemNumbersData.reactantObject || {};
-            let dataProduct = chemNumbersData.productObject || {};
+                let reactantFragmentsData = Array.from(this.table.reactantFragments.values()).map(fragment => ({
+                    fragmentId: fragment.fragmentId,
+                    formula: fragment.formula,
+                    molarMass: parseFloat(fragment.molarMass),
+                    m: parseFloat(fragment.m),
+                    mUnit: fragment.mUnit,
+                    n: parseFloat(fragment.n),
+                    nUnit: fragment.nUnit,
+                    equivalent: parseFloat(fragment.equivalent),
+                    action: fragment.action
+                }));
 
-            let XArrow = parseFloat(localStorage.getItem('xCoordinateArrow')) || -1.0;
+                let productFragmentsData = Array.from(this.table.productFragments.values()).map(fragment => ({
+                    fragmentId: fragment.fragmentId,
+                    formula: fragment.formula,
+                    molarMass: parseFloat(fragment.molarMass),
+                    m: parseFloat(fragment.m),
+                    mUnit: fragment.mUnit,
+                    n: parseFloat(fragment.n),
+                    nUnit: fragment.nUnit,
+                    equivalent: parseFloat(fragment.equivalent),
+                    action: fragment.action
+                }));
 
-            let dataContainer = {
-                ChemDocumentData: chemDocumentData,
-                ReactantData: JSON.stringify(dataReactant),
-                ProductData: JSON.stringify(dataProduct),
-                xCoordinateArrow: XArrow
-            };
+                let data = {
+                    ChemDocumentData: chemDocumentData,
+                    ReactantData: reactantFragmentsData,
+                    ProductData: productFragmentsData,
+                    XCoordinateArrow: XArrow
+                };
 
-            let id = @ViewBag.Id;
+                let id = @ViewBag.Id;
+                // console.log('Отправка данных на сервер:', data);
+                let response = await fetch('/chemeditor/save_data/' + id, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
 
-            // console.log('Отправка данных на сервер:', dataContainer);
-
-            let response = await fetch('/chemeditor/save_data/' + id, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(dataContainer)
-            });
-
-            if (response.ok) {
-                if (response.status !== 204) { // Check if the response is not empty
-                    let contentType = response.headers.get('content-type');
-                    if (contentType && contentType.indexOf('application/json') !== -1) {
-                        let responseData = await response.json();
-                        // console.log('Данные успешно сохранены на сервере.', responseData);
-                        return responseData;
+                if (response.ok) {
+                    if (response.status !== 204) { // Check if the response is not empty
+                        let contentType = response.headers.get('content-type');
+                        if (contentType && contentType.indexOf('application/json') !== -1) {
+                            let responseData = await response.json();
+                            // console.log('Данные успешно сохранены на сервере.', responseData);
+                            return responseData;
+                        } else {
+                            // console.log('Данные успешно сохранены на сервере.');
+                            return null;
+                        }
                     } else {
                         // console.log('Данные успешно сохранены на сервере.');
                         return null;
                     }
                 } else {
-                    // console.log('Данные успешно сохранены на сервере.');
-                    return null;
+                    // console.error('Произошла ошибка при отправке данных на сервер:', response.statusText);
+                    let errorText = await response.text();
+                    console.error('Сообщение об ошибке сервера:', errorText);
+                    throw new Error(response.statusText);
                 }
-            } else {
-                // console.error('Произошла ошибка при отправке данных на сервер:', response.statusText);
-                let errorText = await response.text();
-                // console.error('Сообщение об ошибке сервера:', errorText);
-                throw new Error(response.statusText);
+            } catch (err) {
+                // console.error('Произошла ошибка в sendDataToServerAsync:', err);
+                throw err;
             }
-        } catch (err) {
-            // console.error('Произошла ошибка в sendDataToServerAsync:', err);
-            throw err;
         }
-    }
 
-    function generateChemDocumentData() {
-        let ChemDocument = getComposer().exportObjs(Kekule.ChemDocument);
-        let data = "";
-        for (let i = 0, l = ChemDocument.length; i < l; ++i) {
-            let part = ChemDocument[i];
-            data += Kekule.IO.saveFormatData(part, 'Kekule-JSON');
+        generateChemDocumentData() {
+            let ChemDocument = this.composer.exportObjs(Kekule.ChemDocument);
+            let data = "";
+            for (let i = 0, l = ChemDocument.length; i < l; ++i) {
+                let part = ChemDocument[i];
+                data += Kekule.IO.saveFormatData(part, 'Kekule-JSON');
+            }
+            //console.log(data);
+            return data;
         }
-        //console.log(data);
-        return data;
-    }
 
-    function generateChemNumbersData() {
-        let reactantObject = {};
-        let productObject = {};
+        async eventHandler() {
+            this.chemObj = this.composer.getChemObj();
+            this.updateArrowState();
 
-        for (let fragmentId in reactantData) {
-            let fragment = reactantData[fragmentId];
-            reactantObject[fragmentId] = {
-                fragmentId: fragment.fragmentId,
-                formula: fragment.formula,
-                molarMass: fragment.molarMass,
-                m: fragment.m,
-                mUnit: fragment.mUnit,
-                n: fragment.n,
-                nUnit: fragment.nUnit,
-                equivalent: fragment.equivalent,
-                action: fragment.action
+            this.observedReactant.clear();
+            this.observedProduct.clear();
+
+            var fragments = Kekule.ChemStructureUtils.getAllStructFragments(this.chemObj, true);
+
+            // var chemDoc = this.composer.getChemObj();
+            // var formulas = [];
+            // for (var i = 0, l = chemDoc.getChildCount(); i < l; ++i) {
+            //     var child = chemDoc.getChildAt(i);
+            //     if (child instanceof Kekule.Molecule) {
+            //         formulas.push(child.calcFormula().getText());
+            //     }
+            // }
+            // console.log("form:", formulas);
+
+            if (fragments.length == 0) {
+                this.removeAllColumnsExceptFirst();
+            } else {
+
+                for (var i = 0; i < fragments.length; i++) {
+                    var currFragment = fragments[i];
+                    // console.log(i,currFragment.calcFormula().getText());
+                    // console.log(currFragment.getAllChildConnectors());
+                    // if (i === 1) {
+                        
+                        // console.log(currFragment.getSubFragments());
+                        // console.log(currFragment.getSubFragments()[0].calcFormula().getText());
+                        // console.log(Kekule.IO.saveFormatData(currFragment, 'cml'));
+                    // }
+                    const xArrow = this.xCoordinateArrow || null;
+                    this.updateFragments(currFragment, xArrow);
+                }
+                this.deleteFragment(true);
+                this.deleteFragment(false);
+            }
+            await this.sendDataToServerAsync();
+        }
+
+        updateArrowState() {
+            let arrows = this.composer.exportObjs(Kekule.Glyph.ReactionArrow);
+            if (arrows.length > 0) {
+                const objArrow = arrows[0];
+                const coordX = objArrow.getCoord2D().x;
+                const childCoordX = objArrow.getChildAt(0).getCoord2D().x;
+                const currentXCoordinate = coordX + childCoordX;
+                const storedXCoordinate = parseFloat(this.xCoordinateArrow);
+
+                if (currentXCoordinate !== storedXCoordinate || !storedXCoordinate) {
+                    this.xCoordinateArrow = currentXCoordinate;
+                    this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
+                }
+            } else if (!document.querySelector('.K-Chem-ArrowLineIaController')) {
+                this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
+                this.xCoordinateArrow = null;
+            }
+        }
+
+        updateFragments(currFragment, xArrow) {
+            //console.log("in updateFragments");
+            var fragmentId = currFragment.getId();
+            var xCoordinateAtom = this.calculateAtomCoordinate(currFragment);
+            if (xCoordinateAtom === null) {
+                return; 
+            }
+            const isLeftOfArrow = xArrow === null || (xCoordinateAtom < xArrow);
+
+            if (isLeftOfArrow) {
+                this.observedReactant.add(fragmentId);
+                if (!this.table.reactantFragments.has(fragmentId)) {
+                    var fragment = new Fragment(fragmentId);
+                    fragment.fragment = currFragment;
+                    fragment.flagReactant = true;
+                    fragment.table = this.table;
+                } else {
+                    var fragment = this.table.reactantFragments.get(fragmentId);
+                    fragment.fragment = currFragment;
+                    fragment.flagReactant = true;
+                }
+                fragment.processFragment();
+            } else {
+                this.observedProduct.add(fragmentId);
+                if (!this.table.productFragments.has(fragmentId)) {
+                    var fragment = new Fragment(fragmentId);
+                    fragment.fragment = currFragment;
+                    fragment.flagReactant = false;
+                    fragment.table = this.table;
+                } else {
+                    var fragment = this.table.productFragments.get(fragmentId);
+                    fragment.fragment = currFragment;
+                    fragment.flagReactant = false;
+                }
+                fragment.processFragment();
+            }
+        }
+
+        deleteFragment(flagReactant) {
+            let flagSetAction = false;
+            let columnsToDelete = [];
+
+            const fragmentData = flagReactant ? this.table.reactantFragments : this.table.productFragments;
+            const observedFragmentIds = flagReactant ? this.observedReactant : this.observedProduct;
+
+            for (let existingFragmentId of fragmentData.keys()) {
+                if (!observedFragmentIds.has(existingFragmentId)) {
+                    columnsToDelete.push(existingFragmentId);
+                }
+            }
+
+            if (columnsToDelete.length > 0) {
+                const table = flagReactant ? this.table.tableReactant : this.table.tableProduct;
+
+                for (let i = columnsToDelete.length - 1; i >= 0; i--) {
+                    const fragmentId = columnsToDelete[i];
+
+                    for (let j = 0; j < table.rows[TABLE_ROWS.UNIQUE].cells.length; j++) {
+                        if (table.rows[TABLE_ROWS.UNIQUE].cells[j].innerHTML === fragmentId) {
+                            for (let k = 0; k < table.rows.length; k++) {
+                                table.rows[k].deleteCell(j);
+                            }
+                        }
+                    }
+                    if (fragmentData.get(fragmentId).action === true) {
+                        flagSetAction = true;
+                    }
+
+                    fragmentData.delete(fragmentId);
+
+                }
+            }
+            if (flagSetAction) {
+                let fragmentIds;
+                let firstFragmentId;
+
+                const thisTable = flagReactant ? this.table.tableReactant : this.table.tableProduct;
+                const anotherTable = flagReactant ? this.table.tableProduct : this.table.tableReactant;
+
+                const anotherfragmentData = flagReactant ? this.table.productFragments : this.table.reactantFragments;
+                if (fragmentData.size > 0) {
+                    fragmentIds = Array.from(fragmentData.keys());
+                    firstFragmentId = fragmentIds[0];
+                    fragmentData.get(firstFragmentId).action = true;
+                    this.table.activeFragment = fragmentData.get(firstFragmentId);
+
+                    const radioButtons = thisTable.getElementsByClassName('action');
+                    radioButtons[0].checked = true;
+                } else if (anotherfragmentData.size > 0) {
+                    fragmentIds = Array.from(anotherfragmentData.keys());
+                    firstFragmentId = fragmentIds[0];
+                    anotherfragmentData.get(firstFragmentId).action = true;
+                    this.table.activeFragment = anotherfragmentData.get(firstFragmentId);
+
+                    const radioButtons = anotherTable.getElementsByClassName('action');
+                    radioButtons[0].checked = true;
+                }
+            }
+        }
+
+        calculateAtomCoordinate(currFragment) {
+            if (currFragment && currFragment.getCoord2D()) {
+                return currFragment.getCoord2D().x;
+            } else if (currFragment && !currFragment.getCoord2D() && currFragment.getNodeAt(0) !== undefined) {
+                var node = currFragment.getNodeAt(0);
+                return node.getCoord2D().x;
+            } else {
+                return null;
+            }
+        }
+
+        removeAllColumnsExceptFirst() {
+            this.xCoordinateArrow = null;
+            this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
+
+            var table = this.table.tableReactant;
+            for (var i = table.rows[0].cells.length - 1; i > 0; i--) {
+                for (var j = 0; j < table.rows.length; j++) {
+                    table.rows[j].deleteCell(i);
+                }
+            }
+            this.table.reactantFragments.clear();
+
+            var table = this.table.tableProduct;
+            for (var i = table.rows[0].cells.length - 1; i > 0; i--) {
+                for (var j = 0; j < table.rows.length; j++) {
+                    table.rows[j].deleteCell(i);
+                }
+            }
+            this.table.productFragments.clear();
+        }
+
+        async uploadMoleculeAsync(repItemData, info) {
+            try {
+                
+                let data = {
+                    Name: info.name,
+                    Abbreviation: info.abbreviation,
+                    FormulaText: info.formula,
+                    InputTexts: info.text,
+                    StructData: repItemData.structData
+                };
+
+                const response = await fetch('/chemeditor/upload_molecule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    console.log('Молекула успешно загружена.');
+                } else {
+                    console.error('Произошла ошибка при загрузке молекулы:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Произошла ошибка при отправке данных на сервер:', error);
+            }
+        }
+
+        async addRepoItemAndUpdate() {
+            console.log("in addRepoItemAndUpdate");
+
+            if (this.firstRun === true) {
+                let molecules = await this.getMolecules();
+                for (const molecule of molecules) {
+                    Kekule.Editor.RepositoryData.subGroups.push(molecule);
+                    var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(molecule.structData, molecule.dataFormat, molecule.scale);
+                    repItem.setInputTexts(molecule.inputTexts).setName(molecule.name || molecule.inputTexts[0]);
+                    Kekule.Editor.RepositoryItemManager.register(repItem);
+                    await this.addRowToContent(molecule.name, molecule.abbreviation, molecule.formulaText, molecule.text);
+                }
+            }
+
+            if (this.firstRun === false) { 
+                var result = this.saveRepItemData();
+                var repItemData = result.obj;
+                var info = result.info;
+
+
+                var oldMolecule = Kekule.Editor.RepositoryItemManager.getItem(info.name);
+                if (oldMolecule) {
+                    Kekule.Editor.RepositoryItemManager.unregister(oldMolecule);
+                }
+
+
+                //  отправка на сервер
+                await this.uploadMoleculeAsync(repItemData, info);
+                // console.log(repItemData);
+
+                Kekule.Editor.RepositoryData.subGroups.push(repItemData);
+                var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(repItemData.structData, repItemData.dataFormat, repItemData.scale);
+                repItem.setInputTexts(repItemData.inputTexts).setName(repItemData.name || repItemData.inputTexts[0]);
+                Kekule.Editor.RepositoryItemManager.register(repItem);
+
+                await this.addRowToContent(info.name, info.abbreviation, info.formula, info.text);
+            }
+            
+            if (targetComposer) {
+                var composerDiv = document.getElementById('composer');
+                // Очищаем содержимое composerDiv
+                while (composerDiv.firstChild) {
+                    composerDiv.removeChild(composerDiv.firstChild);
+                }
+            }
+            // Создаем новый редактор внутри div с id="composer"
+            targetComposer = new Kekule.Editor.Composer(document.getElementById('composer'));
+            if (this.firstRun === false) {
+                targetComposer.load(repItemData.structData, repItemData.dataFormat);
+            }
+            this.composer = targetComposer;
+
+        }
+
+        async addRowToContent(name, abbreviation, formulaText, inputTexts) {
+            const contentToToggle = document.getElementById('contentToToggle');
+
+            const existingRows = contentToToggle.querySelectorAll('.molecule-row');
+            existingRows.forEach(row => {
+                if (row.querySelector('label').textContent === 'Name: ' + name) {
+                    row.remove();
+                    console.log("DELETE");
+                }
+            });
+
+            const row = document.createElement('div');
+            row.classList.add('molecule-row');
+
+            const nameLabel = document.createElement('label');
+            nameLabel.textContent = 'Name: ' + name;
+            row.appendChild(nameLabel);
+
+            const abbrLabel = document.createElement('label');
+            abbrLabel.textContent = 'Abbr: ' + abbreviation;
+            row.appendChild(abbrLabel);
+
+            const formulaLabel = document.createElement('label');
+            formulaLabel.textContent = 'Formula Text: ' + formulaText;
+            row.appendChild(formulaLabel);
+
+            const inputTextLabel = document.createElement('label');
+            inputTextLabel.textContent = 'Input Texts: ' + inputTexts;
+            row.appendChild(inputTextLabel);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = '❌';
+            deleteButton.classList.add('delete-button');
+
+            deleteButton.addEventListener('click', async () => {
+                row.remove();
+                await this.deleteMolecule(name);
+
+                var oldMolecule = Kekule.Editor.RepositoryItemManager.getItem(name);
+                if (oldMolecule) {
+                    Kekule.Editor.RepositoryItemManager.unregister(oldMolecule);
+
+
+                    if (targetComposer) {
+                        var composerDiv = document.getElementById('composer');
+                        while (composerDiv.firstChild) {
+                            composerDiv.removeChild(composerDiv.firstChild);
+                        }
+                    }
+                    targetComposer = new Kekule.Editor.Composer(document.getElementById('composer'));
+
+                    await this.initialize();
+                }
+            });
+
+            row.appendChild(deleteButton);
+
+            contentToToggle.appendChild(row);
+        }
+
+        async deleteMolecule(name) {
+            try {
+                console.log("deleteMolecule:", name);
+                const response = await fetch(`/chemeditor/DeleteMolecule?name=${encodeURIComponent(name)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    console.log('Molecule deleted successfully');
+                    
+                } else {
+                    const errorData = await response.json();
+                    console.error('Error:', errorData.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+
+        getRepObject() {
+            var structClass = Kekule.Widget.getWidgetById('selStructType').getValue();
+            var result = new structClass();
+            var composer = Kekule.Widget.getWidgetById('composer');
+            var srcObj = composer.exportObjs(Kekule.StructureFragment)[0];
+            if (srcObj) {
+                result.assign(srcObj, false);  // do not copy ids
+            }
+            var abbr = Kekule.Widget.getWidgetById('editAbbr').getValue();
+            if (abbr && result.setAbbr) {
+                result.setAbbr(abbr);
+            }
+            var formulaText = Kekule.Widget.getWidgetById('editFormulaText').getValue();
+            if (formulaText && result.setFormulaText) {
+                result.setFormulaText(formulaText);
+            }
+
+            // remove render options
+            result.setRenderOptions(undefined);
+
+            // translate coords
+            result.setCoord2D({ 'x': 0, 'y': 0 });
+            var objBox = Kekule.Render.ObjUtils.getContainerBox(result, Kekule.CoordMode.COORD2D, true);
+
+            if (objBox) {
+                var oldObjCoord = result.getCoordOfMode ?
+                    result.getCoordOfMode(Kekule.CoordMode.COORD2D, true) || {} :
+                    {};
+                var delta = {};
+                delta.x = -(objBox.x2 + objBox.x1) / 2;
+                delta.y = -(objBox.y2 + objBox.y1) / 2;
+
+                // transform coords of children
+                result.beginUpdate();
+                try {
+                    for (var i = 0, l = result.getNodeCount(); i < l; ++i) {
+                        var node = result.getNodeAt(i);
+                        var coord = node.getAbsCoord2D(true);
+                        coord = Kekule.CoordUtils.add(coord, delta);
+                        node.setAbsCoord2D(coord);
+                    }
+                }
+                finally {
+                    result.endUpdate();
+                }
+            }
+            return result;
+        }
+
+        setAnchorNodes() {
+            var composer = Kekule.Widget.getWidgetById('composer');
+            var selection = composer.getSelection();
+            for (var i = 0, l = selection.length; i < l; ++i) {
+                var obj = selection[i];
+                if (obj.setIsAnchor)
+                    obj.setIsAnchor(!obj.getIsAnchor());
+            }
+        }
+
+        saveRepItemData() {
+            var repObj = this.getRepObject();
+            var obj = {};
+            let info = {
+                name: null,
+                abbreviation: null,
+                formula: null,
+                text: null
             };
-            // console.log(reactantObject[fragmentId].fragmentId, "|", reactantObject[fragmentId].m);
+
+            var name = Kekule.Widget.getWidgetById('editName').getValue();
+            if (name) {
+                obj.name = name;
+                info.name = name;
+            }
+
+            if (repObj instanceof Kekule.SubGroup) {
+                var inputTexts = Kekule.Widget.getWidgetById('editInputTexts').getValue();
+                if (inputTexts) {
+                    info.text = inputTexts;
+                    inputTexts = inputTexts.split('\n');
+                    obj.inputTexts = inputTexts;
+                } else {
+                    obj.inputTexts = [];
+                }
+
+                if (repObj.getAbbr()) {
+                    Kekule.ArrayUtils.pushUnique(obj.inputTexts, repObj.getAbbr());
+                    info.abbreviation = repObj.getAbbr();
+                }
+                if (repObj.getFormulaText()) {
+                    Kekule.ArrayUtils.pushUnique(obj.inputTexts, repObj.getFormulaText());
+                    info.formula = repObj.getFormulaText();
+                }
+                if (repObj.getName()) {
+                    obj.name = repObj.getName();
+                    info.name = repObj.getName();
+                }
+            }
+            
+            var repObjData = Kekule.IO.saveFormatData(repObj, Kekule.IO.DataFormat.KEKULE_JSON);
+            obj.dataFormat = Kekule.IO.DataFormat.KEKULE_JSON;
+            obj.structData = repObjData;
+            return { obj: obj, info: info };
         }
 
-        for (let fragmentId in productData) {
-            let fragment = productData[fragmentId];
-            productObject[fragmentId] = {
-                fragmentId: fragment.fragmentId,
-                formula: fragment.formula,
-                molarMass: fragment.molarMass,
-                m: fragment.m,
-                mUnit: fragment.mUnit,
-                n: fragment.n,
-                nUnit: fragment.nUnit,
-                equivalent: fragment.equivalent,
-                action: fragment.action
-            };
+        async getMolecules() {
+            try {
+                let response = await fetch('/chemeditor/get_molecules');
+                if (response.ok) {
+                    let data = await response.json();
+                    // console.log(data);
+
+                    let molecules = data.map(item => {
+                        let text = item.inputTexts;
+                        let inputTexts = item.inputTexts.split('\n');
+                        Kekule.ArrayUtils.pushUnique(inputTexts, item.abbreviation);
+                        Kekule.ArrayUtils.pushUnique(inputTexts, item.formulaText);
+                        Kekule.ArrayUtils.pushUnique(inputTexts, item.name);
+
+ 
+
+                        let structDataString = item.structData.replace(/^"/, "'").replace(/"$/, "'");
+                        structDataString = structDataString.replace(/\\"/g, '"');
+                        structDataString = structDataString.slice(1, -1);
+
+
+
+                        return {
+                            abbreviation: item.abbreviation,
+                            formulaText: item.formulaText,
+                            text: text,
+                            name: item.name,
+                            structData: structDataString,
+                            dataFormat: "Kekule-JSON",
+                            inputTexts: inputTexts,
+                            scale: undefined
+                        };
+                    });
+                    // console.log(molecules);
+                    return molecules;
+
+                } else {
+                    console.error('Ошибка получения данных:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Произошла ошибка при получении данных:', error);
+            }
         }
 
-        return { reactantObject, productObject };
     }
 
+    var targetComposer;
+
+    function fillStructTypes() {  //  TO DO
+        var selBox = Kekule.Widget.getWidgetById('selStructType');
+        selBox.setItems([
+            { 'text': 'Kekule.SubGroup', 'value': Kekule.SubGroup }
+            // ,
+            // {'text': 'Kekule.Molecule', 'value': Kekule.Molecule}
+        ]);
+    }
+
+    async function init() {
+        fillStructTypes();
+        const myComposer = new Composer();
+
+        Kekule.Widget.getWidgetById('btnSetAnchor').on('execute', function (e) {
+            myComposer.setAnchorNodes();
+        });
+        Kekule.Widget.getWidgetById('btnAddRepoItem').on('execute', async function (e) {
+            await myComposer.addRepoItemAndUpdate();
+            await myComposer.initialize();
+        });
+    }
 
     Kekule.X.domReady(init);
 
