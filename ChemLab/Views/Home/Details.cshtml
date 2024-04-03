@@ -118,6 +118,23 @@
         display: none;
     }
 
+
+    .delete-button {
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2rem;
+        margin-left: 10px;
+    }
+
+    .delete-button:hover {
+        color: red;
+    }
+
+
+
+
+
 </style>
 <button id="toggleButton">Сохранить молекулу</button>
 
@@ -485,7 +502,7 @@
 
                 this.getChemInfoFromServer(smiles)
                     .then((chemInfo) => {
-                        loadingText.style.display = "none";
+                        loadingText.style.display = "none";          
 
                         if (chemInfo) {
                             var casNumberText = document.createElement("p");
@@ -495,6 +512,14 @@
                             var firstSynonymText = document.createElement("p");
                             firstSynonymText.innerText = "Имя: " + chemInfo.firstSynonym;
                             modalContent.appendChild(firstSynonymText);
+
+                            var molecularWeightText = document.createElement("p");
+                            molecularWeightText.innerText = "Молекулярный масса: " + chemInfo.molecularWeight;
+                            modalContent.appendChild(molecularWeightText);
+
+                            var exactMassText = document.createElement("p");
+                            exactMassText.innerText = "Точная Масса: " + chemInfo.exactMass;
+                            modalContent.appendChild(exactMassText);
 
                             var image = document.createElement("img");
                             image.src = "data:image/png;base64," + chemInfo.imageDataUrl;
@@ -522,7 +547,8 @@
 
         async getChemInfoFromServer(smiles) {
             try {
-            const response = await fetch(`/api/pubchem/get_cas/${encodeURIComponent(smiles)}`);
+                // console.log("smiles=", smiles);
+                const response = await fetch(`/api/pubchem/get_cas/${encodeURIComponent(smiles)}`);
                 if (!response.ok) {
                 }
 
@@ -533,9 +559,11 @@
                 if (data.success) {
                     const casNumber = data.casNumber;
                     const firstSynonym = data.firstSynonym;
+                    const exactMass = data.exactMass;
+                    const molecularWeight = data.molecularWeight;
                     const imageDataUrl = data.image;
 
-                    return { casNumber, firstSynonym, imageDataUrl };
+                    return { casNumber, firstSynonym, exactMass, molecularWeight, imageDataUrl };
                 } else {
                     return null;
                 }
@@ -1573,6 +1601,11 @@
             if (this.firstRun === true) {
                 let molecules = await this.getMolecules();
                 for (const molecule of molecules) {
+                    var oldMolecule = Kekule.Editor.RepositoryItemManager.getItem(molecule.name);
+                    if (oldMolecule) {
+                        Kekule.Editor.RepositoryItemManager.unregister(oldMolecule);
+                    }
+
                     Kekule.Editor.RepositoryData.subGroups.push(molecule);
                     var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(molecule.structData, molecule.dataFormat, molecule.scale);
                     repItem.setInputTexts(molecule.inputTexts).setName(molecule.name || molecule.inputTexts[0]);
@@ -1626,7 +1659,7 @@
 
             const existingRows = contentToToggle.querySelectorAll('.molecule-row');
             existingRows.forEach(row => {
-                if (row.querySelector('label').textContent === 'Name: ' + name) {
+                if (row.querySelector('span').textContent === 'Name: ' + name) {
                     row.remove();
                     console.log("DELETE");
                 }
@@ -1635,19 +1668,31 @@
             const row = document.createElement('div');
             row.classList.add('molecule-row');
 
-            const nameLabel = document.createElement('label');
+            const nameLabel = document.createElement('span');
             nameLabel.textContent = 'Name: ' + name;
             row.appendChild(nameLabel);
 
-            const abbrLabel = document.createElement('label');
+            const separator1 = document.createElement('span');
+            separator1.textContent = ' | ';
+            row.appendChild(separator1);
+
+            const abbrLabel = document.createElement('span');
             abbrLabel.textContent = 'Abbr: ' + abbreviation;
             row.appendChild(abbrLabel);
 
-            const formulaLabel = document.createElement('label');
+            const separator2 = document.createElement('span');
+            separator2.textContent = ' | ';
+            row.appendChild(separator2);
+
+            const formulaLabel = document.createElement('span');
             formulaLabel.textContent = 'Formula Text: ' + formulaText;
             row.appendChild(formulaLabel);
 
-            const inputTextLabel = document.createElement('label');
+            const separator3 = document.createElement('span');
+            separator3.textContent = ' | ';
+            row.appendChild(separator3);
+
+            const inputTextLabel = document.createElement('span');
             inputTextLabel.textContent = 'Input Texts: ' + inputTexts;
             row.appendChild(inputTextLabel);
 
@@ -1680,6 +1725,7 @@
 
             contentToToggle.appendChild(row);
         }
+
 
         async deleteMolecule(name) {
             try {
