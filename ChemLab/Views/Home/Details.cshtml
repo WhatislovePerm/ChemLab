@@ -157,7 +157,6 @@
     <div class="FloatClearer"></div>
 </div>
 
-<div id="editor-container"></div>
 
 <div class="table-container">
     <table id="reactantTable">
@@ -209,6 +208,9 @@
     </table>
 </div>
 
+<div id="editor-container"></div>
+
+
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -224,7 +226,68 @@
 <img id="infoImage" src="~/info.png" alt="Информация" style="width: 20px; height: 20px;">
 
 <script>
+    var ctrlPressed = false;
 
+    document.addEventListener('keydown', function (event) {
+        // console.log("listen", event);
+        if (event.key === 'Control') {
+            ctrlPressed = true;
+        } else if (ctrlPressed && (event.key === 'z' || event.key === 'я')) {
+            activateUndo();
+        } else if (ctrlPressed && event.key === '1') {
+            event.preventDefault();
+            handleBondType('Single');
+        } else if (ctrlPressed && event.key === '2') {
+            event.preventDefault();
+            handleBondType('Double');
+        } else if (ctrlPressed && event.key === '3') {
+            event.preventDefault();
+            handleBondType('Triple');
+        }
+    });
+
+    document.addEventListener('keyup', function (event) {
+        if (event.key === 'Control') {
+            ctrlPressed = false;
+        }
+    });
+
+    function handleBondType(bondType) {
+        var bondToolButton = document.querySelector('.K-Chem-MolBondIaController');
+
+        if (bondToolButton) {
+            bondToolButton.focus();
+            bondToolButton.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+            bondToolButton.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+
+            setTimeout(function () {
+                var bondButton = document.querySelector('.K-Chem-MolBondIaController-' + bondType);
+
+                if (bondButton) {
+                    bondButton.focus();
+                    bondButton.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+                    bondButton.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+
+                    bondButton.click();
+                } else {
+                    console.error('Кнопка bondButton не найдена');
+                }
+            }, 50);
+        } else {
+            console.error('Кнопка bondToolButton не найдена');
+        }
+    }
+
+    function activateUndo() {
+        var backButton = document.querySelector('.K-Chem-Undo'); // Найдите кнопку "назад" с помощью селектора
+        if (backButton && targetComposer) {
+            console.log("click");
+            backButton.click(); // Имитируем щелчок по кнопке "назад"
+            targetComposer.undo();
+        } else {
+            console.log("ne nashel UNDO");
+        }
+    }
 
     window.addEventListener('DOMContentLoaded', insertEditorContent);
 
@@ -263,7 +326,6 @@
         quill.focus(); // Фокусируемся на редакторе
         quill.insertText(quill.getSelection().index, '\n' + dateString + ' ' + timeString + '\n', { color: 'blue' }); // Вставляем дату и время с новой строки, устанавливая текст синим цветом
     }
-
 
     // Опции панели инструментов Quill
     const toolbarOptions = [
@@ -1190,7 +1252,7 @@
         }
 
         async sendDataToServerAsync() {
-            console.log("sendDataToServerAsync");
+            // console.log("sendDataToServerAsync");
             try {
                 let chemDocumentData = this.generateChemDocumentData();
 
