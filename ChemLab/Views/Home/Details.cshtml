@@ -361,7 +361,7 @@
 
     // Функция для сохранения содержимого редактора на сервере
     async function saveEditorContent() {
-        // console.log("sendDataToServerAsync");
+        // console.log("saveEditorContent");
         try {
             let editorHtml = document.querySelector('.ql-editor').innerHTML; 
             // console.log(editorHtml);
@@ -408,10 +408,11 @@
     };
 
     class Table {
-        constructor() {
+        constructor(composer) {
             this.reactantFragments = new Map();
             this.productFragments = new Map();
             this.activeFragment = null;
+            this.composer = composer;''
         }
         tableReactant = document.getElementById("reactantTable");
         tableProduct = document.getElementById("productTable");
@@ -620,8 +621,8 @@
                     nInput.value = this.formatNumber(data.n);
                 }
                 this.createOrUpdateColumn(data, false);
+                this.composer.sendDataToServerAsync();
             });
-
             return nUnitSelect;
         }
 
@@ -636,6 +637,8 @@
                 mCell = mRow.insertCell(mRow.cells.length);
                 if (this.activeFragment) {  //  проверить как будет работать с переносимыми столбцами TO DO
                     fragment.m = (fragment.n * fragment.molarMass / 1000);
+                    mInput.value = this.formatNumber(fragment.m * this.multiplierUnit(fragment, true));
+                } else if (fragment.m !== "" || fragment.m !== 0.00) {
                     mInput.value = this.formatNumber(fragment.m * this.multiplierUnit(fragment, true));
                 }
             } else {
@@ -694,8 +697,8 @@
                     // console.log("mInput.value = ", mInput.value);
                 }
                 this.createOrUpdateColumn(data, false);
+                this.composer.sendDataToServerAsync();
             });
-
             return mUnitSelect;
         }
 
@@ -746,6 +749,8 @@
                     }
                 });
             }
+            console.log("sendDataToServerAsync in ProcessingOtherFieldsForM");
+            this.composer.sendDataToServerAsync();
         }
 
         ProcessingOtherFieldsForN(value, fragmentInfo) {
@@ -772,6 +777,8 @@
                     }
                 });
             }
+            console.log("sendDataToServerAsync in ProcessingOtherFieldsForN");
+            this.composer.sendDataToServerAsync();
         }
 
         actionCell(table, fragment, flagNew) {
@@ -803,9 +810,15 @@
                     this.updateEmptyFields(fragment, false);
                 }
 
+                // this.reactantFragments.forEach((value, key) => {
+                    // this.createOrUpdateColumn(value, false);
+                // });
+
                 this.productFragments.forEach((value, key) => {
                     this.createOrUpdateColumn(value, false);
                 });
+                console.log("sendDataToServerAsync in radioInput on change");
+                this.composer.sendDataToServerAsync();
 
             });
 
@@ -816,19 +829,30 @@
             const data = flagReactant ? this.reactantFragments : this.productFragments;
             for (var [key, element] of data.entries()) {
                 if (element.action === false) {
-                    if (element.n === "" && element.m === "") {
+                    // console.log("in upempty, element.n=", element.n, "element.m=", element.m);
+                    // if (element.n === "" && element.m === "") {
+                    if (this.checkEmpty(element.n) && this.checkEmpty(element.m)) {
                         element.n = activeFragment.n * element.equivalent / activeFragment.equivalent;
                         element.m = (element.n * element.molarMass / 1000);
                         this.createOrUpdateColumn(element, false);
-                    } else if (element.n === "") {
+                    // } else if (element.n === "") {
+                    } else if (this.checkEmpty(element.n)) {
                         element.n = (element.m / element.molarMass * 1000);
                         this.createOrUpdateColumn(element, false);
-                    } else if (element.m === "") {
+                    // } else if (element.m === "") {
+                    } else if (this.checkEmpty(element.m)) {
                         element.m = (element.n * element.molarMass / 1000);
                         this.createOrUpdateColumn(element, false);
                     }
                 }
             }
+        }
+
+        checkEmpty(data) {
+            if (data === "" || data === 0 || data === 0.00) {
+                return true;
+            }
+            return false;
         }
 
         eqvCell(table, fragment, flagNew, index) {
@@ -861,12 +885,13 @@
                     } else {
                         fragment.equivalent = 1.00;
                         this.createOrUpdateColumn(fragment, false);
+                        this.composer.sendDataToServerAsync();
                     }
                 });
             } else {
                 // Если фрагмент не является реагентом, вводится выход реакции
                 const result = parseFloat((fragment.m / (this.activeFragment.n / 1000.0 * fragment.molarMass)) * 100.0);
-                // мб this.activeFragment.n делить еще на эквивалент
+                // мб this.activeFragment.n делить еще на эквивалент TO DO
                 if (!isNaN(result) && isFinite(result)) {
                     eqvInput.value = result.toFixed(2);
                 } else {
@@ -915,6 +940,8 @@
                 fragmentInfo.n *= multiplier;
                 this.createOrUpdateColumn(fragmentInfo, false);
             }
+            console.log("sendDataToServerAsync in ProcessingOtherFieldsForEqv");
+            this.composer.sendDataToServerAsync();
         }
 
 
@@ -1011,7 +1038,6 @@
             this.fragment = null;
             this.fragmentId = id;
 
-            // Публичные свойства класса
             this.formula = "";
             this.molarMass = "";
             this.m = "";
@@ -1145,7 +1171,7 @@
 
     class Composer {
         constructor() {
-            this.table = new Table();
+            this.table = new Table(this);
 
             this.observedReactant = new Set();
             this.observedProduct = new Set();
@@ -1165,9 +1191,7 @@
 
             this.firstRun = false;
 
-           
 
-            // this.composer = Kekule.Widget.getWidgetById('composer');
             if (!targetComposer) {
                 targetComposer = new Kekule.Editor.Composer(document.getElementById('composer'));
             }
@@ -1359,6 +1383,7 @@
                 this.deleteFragment(true);
                 this.deleteFragment(false);
             }
+            console.log("sendDataToServerAsync in eventHandler");
             await this.sendDataToServerAsync();
         }
 
