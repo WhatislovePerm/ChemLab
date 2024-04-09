@@ -514,11 +514,11 @@
                             modalContent.appendChild(firstSynonymText);
 
                             var molecularWeightText = document.createElement("p");
-                            molecularWeightText.innerText = "Молекулярный масса: " + chemInfo.molecularWeight;
+                            molecularWeightText.innerText = "Молекулярная масса: " + chemInfo.molecularWeight;
                             modalContent.appendChild(molecularWeightText);
 
                             var exactMassText = document.createElement("p");
-                            exactMassText.innerText = "Точная Масса: " + chemInfo.exactMass;
+                            exactMassText.innerText = "Точная масса: " + chemInfo.exactMass;
                             modalContent.appendChild(exactMassText);
 
                             var image = document.createElement("img");
@@ -580,7 +580,7 @@
             } else {
                 mwCell = mwRow.cells[index];
             }
-            mwCell.innerHTML = content.toFixed(2);
+            mwCell.innerHTML = content.toFixed(4);
         }
 
         nCell(table, fragment, flagNew, index) {
@@ -1113,10 +1113,6 @@
             let totalMass = 0;
             for (let i = 0; i < this.fragment.getNodeCount(); ++i) {
                 totalMass += this.processNode(this.fragment.getNodeAt(i));
-                // if (this.fragment.getNodeAt(i) && this.fragment.getNodeAt(i).calcFormula()) {
-                    // console.log("i=", i, "node=", this.fragment.getNodeAt(i));
-                    // console.log("form=", this.fragment.getNodeAt(i).calcFormula().getText());
-                // }
             }
             return totalMass;
         }
@@ -1125,15 +1121,9 @@
             let totalMass = 0;
             if (node instanceof Kekule.Atom || node instanceof Kekule.SubGroup) {
                 totalMass += this.calculateFragmentMass(node);
-                // console.log("", "i=", i, "form=", node.calcFormula().getText());
                 if (node instanceof Kekule.SubGroup) {
                     for (let i = 0; i < node.getNodeCount(); ++i) {
                         totalMass += this.processNode(node.getNodeAt(i)); // Рекурсивный вызов для обработки внутренних узлов
-                        // console.log("node=", node.getNodeAt(i), "i=", i);
-                        // console.log("form=", node.getNodeAt(i).calcFormula().getText(), "i=", i);
-                        if (i === 0) {
-                            console.log("form=", node.calcFormula().getText());
-                        }
                     }
                 }
             }
@@ -1149,7 +1139,7 @@
                 }
                 if (node.getImplicitHydrogenCount) {
                     const hcount = node.getImplicitHydrogenCount() || 0;
-                    mass += hcount * 1.01;
+                    mass += hcount * 1.00784;
                 }
             }
             return mass;
