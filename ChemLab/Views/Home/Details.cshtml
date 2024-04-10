@@ -248,14 +248,15 @@
 
     document.addEventListener('keydown', function (event) {
         // console.log("listen", event);
-        if (event.key === 'Shift') {
-            shiftPressed = true;
-        } else if (event.key === 'Control') {
+        // if (event.key === 'Shift') {
+            // shiftPressed = true;
+        // } else
+        if (event.key === 'Control') {
             ctrlPressed = true;
-        } else if (!shiftPressed && ctrlPressed && (event.key === 'z' || event.key === 'я')) {
-            activateUndo();
-        } else if (shiftPressed && ctrlPressed && (event.key === 'z' || event.key === 'я')) {
-            activateRendo();
+        // } else if (!shiftPressed && ctrlPressed && (event.key === 'z' || event.key === 'я')) {
+            // activateUndo();
+        // } else if (shiftPressed && ctrlPressed && (event.key === 'z' || event.key === 'я')) {
+            // activateRendo();
         } else if (ctrlPressed && event.key === '1') {
             event.preventDefault();
             handleBondType('Single');
@@ -271,9 +272,10 @@
     document.addEventListener('keyup', function (event) {
         if (event.key === 'Control') {
             ctrlPressed = false;
-        } else if (event.key === 'Shift') {
-            shiftPressed = false;
-        }
+        } 
+        // else if (event.key === 'Shift') {
+            // shiftPressed = false;
+        // }
     });
 
     function handleBondType(bondType) {
@@ -302,23 +304,23 @@
         }
     }
 
-    function activateUndo() {
-        var undoButton = document.querySelector('.K-Chem-Undo');
-        if (undoButton && targetComposer) {
-            targetComposer.undo();
-        } else {
-            console.log("ne nashel UNDO");
-        }
-    }
+    // function activateUndo() {
+    //     var undoButton = document.querySelector('.K-Chem-Undo');
+    //     if (undoButton && targetComposer) {
+    //         targetComposer.undo();
+    //     } else {
+    //         console.log("ne nashel UNDO");
+    //     }
+    // }
 
-    function activateRendo() {
-        var rendodButton = document.querySelector('.K-Chem-Rendo');
-        if (rendodButton && targetComposer) {
-            targetComposer.rendo();
-        } else {
-            console.log("ne nashel Rendo");
-        }
-    }
+    // function activateRendo() {
+    //     var rendodButton = document.querySelector('.K-Chem-Rendo');
+    //     if (rendodButton && targetComposer) {
+    //         targetComposer.rendo();
+    //     } else {
+    //         console.log("ne nashel Rendo");
+    //     }
+    // }
 
     window.addEventListener('DOMContentLoaded', insertEditorContent);
 
