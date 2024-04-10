@@ -1395,6 +1395,7 @@
 
                 for (var i = 0; i < fragments.length; i++) {
                     var currFragment = fragments[i];
+                    currFragment.canonicalize();
                     const xArrow = this.xCoordinateArrow || null;
                     this.updateFragments(currFragment, xArrow);
                 }
