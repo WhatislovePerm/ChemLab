@@ -1796,6 +1796,12 @@
 
             row.appendChild(deleteButton);
 
+            const rows = contentToToggle.querySelectorAll('.molecule-row');
+            const areAllRowsVisible = Array.from(rows).every(row => !row.classList.contains('hidden'));
+            if (areAllRowsVisible) {
+                row.classList.remove('hidden');
+            }
+
             contentToToggle.appendChild(row);
         }
 
