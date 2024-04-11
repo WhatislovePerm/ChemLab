@@ -15,5 +15,6 @@ namespace ChemLab.Data.Entity
         public string InputTexts { get; set; }
         public string StructData { get; set; }
         public string UserId { get; set; }
+        public byte[] ImageData { get; set; }
     }
 }

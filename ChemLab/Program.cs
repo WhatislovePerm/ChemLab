@@ -89,6 +89,11 @@ app.MapControllerRoute(
     defaults: new { controller = "ChemEditor", action = "DeleteMolecule" });
 
 app.MapControllerRoute(
+    name: "uploadMolecule",
+    pattern: "/chemeditor/UploadImage/{name}",
+    defaults: new { controller = "ChemEditor", action = "UploadImage" });
+
+app.MapControllerRoute(
     name: "GetAllMolecules",
     pattern: "/chemeditor/get_molecules",
     defaults: new { controller = "ChemEditor", action = "GetAllMolecules" });

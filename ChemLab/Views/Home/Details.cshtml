@@ -46,7 +46,6 @@
         padding: 12px 15px;
         text-align: left;
         border-bottom: 1px solid #ddd;
-        /* min-height: 50px; */
     }
 
     th {
@@ -64,11 +63,11 @@
         background-color: #f2f2f2;
     }
 
-    td:not(:first-child):hover { /* изменено здесь */
+    td:not(:first-child):hover {
         background-color: #ddd;
     }
 
-        td:not(:first-child):hover ~ td { /* изменено здесь */
+        td:not(:first-child):hover ~ td {
             background-color: transparent;
         }
 
@@ -131,26 +130,42 @@
         color: red;
     }
 
+    .error-message {
+        display: none;
+        position: absolute;
+        background-color: #f44336;
+        color: white;
+        padding: 5px;
+        border-radius: 3px;
+        z-index: 2;
+        font-size: 0.8em;
+    }
 
+    label {
+        position: relative;
+        display: inline-block;
+    }
 
 
 
 </style>
-<button id="toggleButton">Сохранить молекулу</button>
-
+<button id="toggleButtonSave">Сохранить молекулу</button>
+<button id="toggleRowsButton" class="hidden">Скрыть/показать молекулы</button>
 
 <div id="contentToToggle" class="hidden">
     <div>
-        <!--   <button id="btnGetData" data-widget="Kekule.Widget.Button" data-text="Get Data">Get Data</button> -->
         <button id="btnSetAnchor" data-widget="Kekule.Widget.Button" data-text="Set Anchor(s)">Set Anchor(s)</button>
+        <p id="setAnchorError" class="error-message">Произошла ошибка при установке якоря</p>
         <select id="selStructType" data-widget="Kekule.Widget.SelectBox"></select>
         <label>
             Name:
-            <input id="editName" type="text" data-widget="Kekule.Widget.TextBox" />
+            <input id="editName" type="text" data-widget="Kekule.Widget.TextBox" placeholder="Имя">
+            <p id="nameError" class="error-message">Пожалуйста, заполните это поле</p>
         </label>
         <label>
             Abbr:
-            <input id="editAbbr" type="text" data-widget="Kekule.Widget.TextBox" />
+            <input id="editAbbr" type="text" data-widget="Kekule.Widget.TextBox" placeholder="Аббревиатура">
+            <p id="abbrError" class="error-message">Пожалуйста, заполните это поле</p>
         </label>
         <label>
             Formula Text:
@@ -227,8 +242,6 @@
 
 <div id="editor-container"></div>
 
-
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CAS Number Lookup</title>
@@ -243,6 +256,62 @@
 <img id="infoImage" src="~/info.png" alt="Информация" style="width: 20px; height: 20px;">
 
 <script>
+
+    function showErrorUnderButton() {
+        var setAnchorError = document.getElementById('setAnchorError');
+        setAnchorError.style.display = 'block';
+
+        setTimeout(function () {
+            setAnchorError.style.display = 'none';
+        }, 5000);
+    }
+
+
+    document.getElementById('editName').addEventListener('input', validateName);
+    document.getElementById('editAbbr').addEventListener('input', validateAbbr);
+
+    function validateName() {
+        var nameValue = this.value.trim();
+        var nameError = document.getElementById('nameError');
+
+        if (nameValue === '') {
+            nameError.style.display = 'block';
+        } else {
+            nameError.style.display = 'none';
+        }
+    }
+
+    function validateAbbr() {
+        var abbrValue = this.value.trim();
+        var abbrError = document.getElementById('abbrError');
+
+        if (abbrValue === '') {
+            abbrError.style.display = 'block';
+        } else {
+            abbrError.style.display = 'none';
+        }
+    }
+
+    document.getElementById('btnAddRepoItem').addEventListener('click', function () {
+        validateName.call(document.getElementById('editName'));
+        validateAbbr.call(document.getElementById('editAbbr'));
+
+        var nameValue = document.getElementById('editName').value.trim();
+        var abbrValue = document.getElementById('editAbbr').value.trim();
+
+        if (nameValue === '' || abbrValue === '') {
+            return false;
+        }
+    });
+
+    document.getElementById('editName').addEventListener('click', function () {
+        document.getElementById('nameError').style.display = 'none';
+    });
+
+    document.getElementById('editAbbr').addEventListener('click', function () {
+        document.getElementById('abbrError').style.display = 'none';
+    });
+
     var ctrlPressed = false;
 
     document.addEventListener('keydown', function (event) {
@@ -369,12 +438,9 @@
         await saveEditorContent();
     });
 
-    // Функция для сохранения содержимого редактора на сервере
     async function saveEditorContent() {
-        // console.log("saveEditorContent");
         try {
             let editorHtml = document.querySelector('.ql-editor').innerHTML; 
-            // console.log(editorHtml);
             let data = {
                 Content: editorHtml
             };
@@ -400,12 +466,22 @@
         }
     }
 
-    const toggleButton = document.getElementById('toggleButton');
+    const toggleButtonSave = document.getElementById('toggleButtonSave');
     const contentToToggle = document.getElementById('contentToToggle');
+    const toggleRowsButton = document.getElementById('toggleRowsButton');
 
-    toggleButton.addEventListener('click', () => {
+    toggleButtonSave.addEventListener('click', () => {
         contentToToggle.classList.toggle('hidden');
+        toggleRowsButton.classList.toggle('hidden'); // Переключаем видимость кнопки
     });
+
+    toggleRowsButton.addEventListener('click', () => {
+        const rows = contentToToggle.querySelectorAll('.molecule-row');
+        rows.forEach(row => {
+            row.classList.toggle('hidden');
+        });
+    });
+
 
     const TABLE_ROWS = {
         FORMULA: 0,
@@ -540,15 +616,10 @@
 
         async getChemInfoFromServer(smiles) {
             try {
-                // console.log("smiles=", smiles);
                 const response = await fetch(`/api/pubchem/get_cas/${encodeURIComponent(smiles)}`);
                 if (!response.ok) {
                 }
-
                 const data = await response.json();
-
-                
-
                 if (data.success) {
                     const casNumber = data.casNumber;
                     const firstSynonym = data.firstSynonym;
@@ -1594,91 +1665,111 @@
                     var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(molecule.structData, molecule.dataFormat, molecule.scale);
                     repItem.setInputTexts(molecule.inputTexts).setName(molecule.name || molecule.inputTexts[0]);
                     Kekule.Editor.RepositoryItemManager.register(repItem);
-                    await this.addRowToContent(molecule.name, molecule.abbreviation, molecule.formulaText, molecule.text);
+                    await this.addRowToContent(molecule.name, molecule.abbreviation, molecule.formulaText, molecule.text, molecule.image);
                 }
             }
 
-            if (this.firstRun === false) { 
-                var result = this.saveRepItemData();
-                var repItemData = result.obj;
-                var info = result.info;
+            if (this.firstRun === false) {
+                var nameValue = document.getElementById('editName').value.trim();
+                var abbrValue = document.getElementById('editAbbr').value.trim();
 
+                if (nameValue && abbrValue) {
+                    var result = this.saveRepItemData();
+                    var repItemData = result.obj;
+                    var info = result.info;
 
-                var oldMolecule = Kekule.Editor.RepositoryItemManager.getItem(info.name);
-                if (oldMolecule) {
-                    Kekule.Editor.RepositoryItemManager.unregister(oldMolecule);
+                    var provStructData = repItemData.structData ? JSON.parse(repItemData.structData) : {};
+
+                    if (provStructData.ctab === undefined) {
+                        showErrorUnderButton();
+                    } else {
+                        var oldMolecule = Kekule.Editor.RepositoryItemManager.getItem(info.name);
+                        if (oldMolecule) {
+                            Kekule.Editor.RepositoryItemManager.unregister(oldMolecule);
+                        }
+
+                        await this.uploadMoleculeAsync(repItemData, info);
+
+                        Kekule.Editor.RepositoryData.subGroups.push(repItemData);
+                        var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(repItemData.structData, repItemData.dataFormat, repItemData.scale);
+                        repItem.setInputTexts(repItemData.inputTexts).setName(repItemData.name || repItemData.inputTexts[0]);
+                        Kekule.Editor.RepositoryItemManager.register(repItem);
+
+                        await this.addRowToContent(info.name, info.abbreviation, info.formula, info.text);
+                    }    
                 }
-
-
-                //  отправка на сервер
-                await this.uploadMoleculeAsync(repItemData, info);
-                // console.log(repItemData);
-
-                Kekule.Editor.RepositoryData.subGroups.push(repItemData);
-                var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(repItemData.structData, repItemData.dataFormat, repItemData.scale);
-                repItem.setInputTexts(repItemData.inputTexts).setName(repItemData.name || repItemData.inputTexts[0]);
-                Kekule.Editor.RepositoryItemManager.register(repItem);
-
-                await this.addRowToContent(info.name, info.abbreviation, info.formula, info.text);
             }
             
             if (targetComposer) {
                 var composerDiv = document.getElementById('composer');
-                // Очищаем содержимое composerDiv
                 while (composerDiv.firstChild) {
                     composerDiv.removeChild(composerDiv.firstChild);
                 }
             }
-            // Создаем новый редактор внутри div с id="composer"
             targetComposer = new Kekule.Editor.Composer(document.getElementById('composer'));
-            if (this.firstRun === false) {
+            if (this.firstRun === false && repItemData && repItemData.structData && repItemData.dataFormat) {
                 targetComposer.load(repItemData.structData, repItemData.dataFormat);
             }
             this.composer = targetComposer;
 
         }
 
-        async addRowToContent(name, abbreviation, formulaText, inputTexts) {
+        async addRowToContent(name, abbreviation, formulaText, inputTexts, image) {
             const contentToToggle = document.getElementById('contentToToggle');
 
             const existingRows = contentToToggle.querySelectorAll('.molecule-row');
             existingRows.forEach(row => {
                 if (row.querySelector('span').textContent === 'Name: ' + name) {
                     row.remove();
-                    console.log("DELETE");
                 }
             });
 
             const row = document.createElement('div');
-            row.classList.add('molecule-row');
+            row.classList.add('molecule-row', 'hidden');
 
-            const nameLabel = document.createElement('span');
-            nameLabel.textContent = 'Name: ' + name;
-            row.appendChild(nameLabel);
+            this.addSpanToRow(row, 'Name: ' + name);
+            this.addSeparatorToRow(row);
+            this.addSpanToRow(row, 'Abbr: ' + abbreviation);
+            if (formulaText) {
+                this.addSeparatorToRow(row);
+                this.addSpanToRow(row, 'Formula Text: ' + formulaText);
+            }
+            if (inputTexts) {
+                this.addSeparatorToRow(row);
+                this.addSpanToRow(row, 'Input Texts: ' + inputTexts);
+            }
 
-            const separator1 = document.createElement('span');
-            separator1.textContent = ' | ';
-            row.appendChild(separator1);
+            if (image) {
+                const img = document.createElement('img');
+                img.src = 'data:image/png;base64,' + image;
+                // img.classList.add('uploaded-image');
+                img.classList.add('uploaded-image', 'hidden');
 
-            const abbrLabel = document.createElement('span');
-            abbrLabel.textContent = 'Abbr: ' + abbreviation;
-            row.appendChild(abbrLabel);
 
-            const separator2 = document.createElement('span');
-            separator2.textContent = ' | ';
-            row.appendChild(separator2);
+                const showHideButton = document.createElement('button');
+                showHideButton.textContent = 'Show/Hide';
+                showHideButton.classList.add('show-hide-button');
+                showHideButton.addEventListener('click', () => {
+                    img.classList.toggle('hidden');
+                });
 
-            const formulaLabel = document.createElement('span');
-            formulaLabel.textContent = 'Formula Text: ' + formulaText;
-            row.appendChild(formulaLabel);
+                img.addEventListener('click', async () => {
+                    await this.uploadImage(row, name);
+                });
 
-            const separator3 = document.createElement('span');
-            separator3.textContent = ' | ';
-            row.appendChild(separator3);
+                row.appendChild(img);
+                row.appendChild(showHideButton);
+            } else {
+                const uploadButton = document.createElement('button');
+                uploadButton.textContent = 'Upload Image';
+                uploadButton.classList.add('upload-button');
 
-            const inputTextLabel = document.createElement('span');
-            inputTextLabel.textContent = 'Input Texts: ' + inputTexts;
-            row.appendChild(inputTextLabel);
+                uploadButton.addEventListener('click', async () => {
+                    await this.uploadImage(row, name);
+                });
+
+                row.appendChild(uploadButton);
+            }
 
             const deleteButton = document.createElement('button');
             deleteButton.textContent = '❌';
@@ -1691,7 +1782,6 @@
                 var oldMolecule = Kekule.Editor.RepositoryItemManager.getItem(name);
                 if (oldMolecule) {
                     Kekule.Editor.RepositoryItemManager.unregister(oldMolecule);
-
 
                     if (targetComposer) {
                         var composerDiv = document.getElementById('composer');
@@ -1710,8 +1800,91 @@
             contentToToggle.appendChild(row);
         }
 
+        addSpanToRow(row, text) {
+            const span = document.createElement('span');
+            span.textContent = text;
+            row.appendChild(span);
+        }
+
+        addSeparatorToRow(row) {
+            const separator = document.createElement('span');
+            separator.textContent = ' | ';
+            row.appendChild(separator);
+        }
+
+
+        async uploadImage(row, name) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.addEventListener('change', async () => {
+                const file = input.files[0];
+                if (file) {
+                    if (!file.type.startsWith('image/')) {
+                        alert('Выбранный файл не является изображением.');
+                        return;
+                    }
+
+                    const imageUrl = URL.createObjectURL(file);
+
+                    const existingImage = row.querySelector('img.uploaded-image');
+                    if (existingImage) {
+                        existingImage.src = imageUrl;
+                        await this.uploadImageToServer(file, name);
+                    } else {
+                        const image = document.createElement('img');
+                        image.src = imageUrl;
+                        image.classList.add('uploaded-image');
+
+                        image.addEventListener('click', async () => {
+                            await this.uploadImage(row);
+                        });
+
+                        const uploadButton = row.querySelector('.upload-button');
+                        if (uploadButton) {
+                            uploadButton.remove();
+                        }
+
+                        const showHideButton = document.createElement('button');
+                        showHideButton.textContent = 'Show/Hide';
+                        showHideButton.classList.add('show-hide-button');
+                        showHideButton.addEventListener('click', () => {
+                            image.classList.toggle('hidden');
+                        });
+
+                        row.appendChild(image);
+                        row.appendChild(showHideButton);
+
+                        await this.uploadImageToServer(file, name);
+                    }
+                }
+            });
+            input.click();
+        }
+
+        async uploadImageToServer(file, name) {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                
+                const response = await fetch(`/chemeditor/UploadImage?name=${encodeURIComponent(name)}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    console.log('Image uploaded successfully');
+                } else {
+                    console.error('Failed to upload image');
+                }
+            } catch (error) {
+                console.error('Error occurred while uploading image:', error);
+            }
+        }
 
         async deleteMolecule(name) {
+            console.log("deleteMolecule:", name);
             try {
                 console.log("deleteMolecule:", name);
                 const response = await fetch(`/chemeditor/DeleteMolecule?name=${encodeURIComponent(name)}`, {
@@ -1869,7 +2042,8 @@
                             structData: structDataString,
                             dataFormat: "Kekule-JSON",
                             inputTexts: inputTexts,
-                            scale: undefined
+                            scale: undefined,
+                            image: item.imageData
                         };
                     });
                     // console.log(molecules);
@@ -1908,6 +2082,7 @@
             await myComposer.initialize();
         });
     }
+
 
     Kekule.X.domReady(init);
 

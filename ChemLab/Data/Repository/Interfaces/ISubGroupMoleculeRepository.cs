@@ -10,6 +10,9 @@ namespace ChemLab.Data.Repository.Interfaces
         Task<IEnumerable<SubGroupMolecule>> GetAllForUser(string userId);
 
         Task DeleteByName(string name, string userId);
+
+        Task AddOrUpdateImage(SubGroupMolecule molecule);
+        Task<SubGroupMolecule> GetByNameAndUserId(string name, string userId);
     }
 
 }

@@ -8,6 +8,8 @@ using ChemLab.Data.Repository;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using System.Xml.Linq;
 
 namespace ChemLab.Controllers
 {
@@ -132,12 +134,13 @@ namespace ChemLab.Controllers
                 {
                     Name = molecule.Name,
                     Abbreviation = molecule.Abbreviation,
-                    FormulaText = molecule.FormulaText,
-                    InputTexts = molecule.InputTexts,
-                    //RepItemData = molecule.RepItemData,
+                    FormulaText = molecule.FormulaText != null ? molecule.FormulaText : "",
+                    InputTexts = molecule.InputTexts != null ? molecule.InputTexts : "",
                     StructData = JsonConvert.SerializeObject(molecule.StructData),
-                    UserId = currentUser.Id
-                };
+                    UserId = currentUser.Id,
+                    ImageData = new byte[0]
+
+            };
 
 
             // Сохраняем молекулу в базе данных для текущего пользователя
@@ -168,8 +171,17 @@ namespace ChemLab.Controllers
                 // Получаем все молекулы для текущего пользователя
                 var molecules = await _subGroupMoleculeRepository.GetAllForUser(currentUser.Id);
 
-                // Возвращаем список молекул на фронтенд
-                return Json(molecules);
+                var moleculesToSend = molecules.Select(molecule => new
+                {
+                    Name = molecule.Name,
+                    Abbreviation = molecule.Abbreviation,
+                    FormulaText = molecule.FormulaText != null ? molecule.FormulaText : null,
+                    InputTexts = molecule.InputTexts != null ? molecule.InputTexts : null,
+                    StructData = molecule.StructData,
+                    ImageData = molecule.ImageData != null ? molecule.ImageData : null
+                });
+
+                return Json(moleculesToSend);
             }
             catch (Exception ex)
             {
@@ -221,7 +233,6 @@ namespace ChemLab.Controllers
                     return NotFound();
                 }
 
-                // Проверяем ChemDocumentData на null
                 if (data.Content != null)
                 {
                     labPractice.TextContent = data.Content;
@@ -249,16 +260,58 @@ namespace ChemLab.Controllers
                     return NotFound();
                 }
 
-                //return Json(new
-                //{
-                //    Content = labPractice.TextContent
-                //});
-
                 return Json(labPractice.TextContent);
             }
             catch (Exception ex)
             {
                 return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadImage(IFormFile image, string name)
+        {
+            try
+            {
+                if (image == null || image.Length == 0)
+                {
+                    return BadRequest("Image file is null or empty");
+                }
+
+                var currentUser = await _userManager.GetUserAsync(User);
+
+                // Проверяем, что пользователь существует
+                if (currentUser == null)
+                {
+                    return BadRequest(new { error = "User not found" });
+                }
+
+                // Получаем молекулу по имени и идентификатору пользователя
+                var molecule = await _subGroupMoleculeRepository.GetByNameAndUserId(name, currentUser.Id);
+
+                if (molecule == null)
+                {
+                    return NotFound("Molecule not found");
+                }
+
+                // Читаем содержимое изображения в MemoryStream
+                using (var memoryStream = new MemoryStream())
+                {
+                    await image.CopyToAsync(memoryStream);
+
+                    // Получаем массив байтов из MemoryStream
+                    var imageData = memoryStream.ToArray();
+
+                    // Заменяем изображение в молекуле
+                    molecule.ImageData = imageData;
+                    await _subGroupMoleculeRepository.AddOrUpdateImage(molecule);
+
+                    return Ok();
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error uploading image: {ex.Message}");
             }
         }
     }
