@@ -472,7 +472,7 @@
 
     toggleButtonSave.addEventListener('click', () => {
         contentToToggle.classList.toggle('hidden');
-        toggleRowsButton.classList.toggle('hidden'); // Переключаем видимость кнопки
+        toggleRowsButton.classList.toggle('hidden');
     });
 
     toggleRowsButton.addEventListener('click', () => {
@@ -1742,7 +1742,6 @@
             if (image) {
                 const img = document.createElement('img');
                 img.src = 'data:image/png;base64,' + image;
-                // img.classList.add('uploaded-image');
                 img.classList.add('uploaded-image', 'hidden');
 
 

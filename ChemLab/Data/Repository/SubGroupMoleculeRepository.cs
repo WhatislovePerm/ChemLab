@@ -17,33 +17,28 @@ namespace ChemLab.Data.Repository
 
         public async Task AddForUser(SubGroupMolecule molecule, string userId)
         {
-            // Получаем пользователя по его идентификатору
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user != null)
             {
-                // Привязываем молекулу к пользователю
                 molecule.UserId = userId;
             }
 
-            // Добавляем молекулу в базу данных
             await Add(molecule);
         }
 
         public async Task<IEnumerable<SubGroupMolecule>> GetAllForUser(string userId)
         {
-            // Используйте Select для преобразования IQueryable к IEnumerable
             var molecules = await _context.SubGroupMolecule
                 .Where(m => m.UserId == userId)
                 .Select(m => new SubGroupMolecule
                 {
                     Name = m.Name,
                     Abbreviation = m.Abbreviation,
-                    FormulaText = m.FormulaText != null ? m.FormulaText : "", // Проверка на NULL и замена на пустую строку
-                    InputTexts = m.InputTexts != null ? m.InputTexts : "", // Проверка на NULL и замена на пустую строку
-                    //StructData = m.StructData != null ? m.StructData : "", // Проверка на NULL и замена на пустую строку
+                    FormulaText = m.FormulaText != null ? m.FormulaText : "",
+                    InputTexts = m.InputTexts != null ? m.InputTexts : "",
                     StructData = m.StructData,
-                    ImageData = m.ImageData != null ? m.ImageData : new byte[0] // Проверка на NULL и замена на пустой массив байт
+                    ImageData = m.ImageData != null ? m.ImageData : new byte[0]
                 })
                 .ToListAsync();
 
@@ -53,17 +48,13 @@ namespace ChemLab.Data.Repository
 
         public async Task DeleteByName(string name, string userId)
         {
-            //Console.WriteLine($"Attempting to delete molecule with name: {name} and userId: {userId}");
-
             var molecule = await _context.SubGroupMolecule.FirstOrDefaultAsync(m => m.Name == name && m.UserId == userId);
             if (molecule != null)
             {
-                //Console.WriteLine($"Molecule found. Deleting molecule with ID: {molecule.Id}");
 
                 _context.SubGroupMolecule.Remove(molecule);
                 await _context.SaveChangesAsync();
 
-                //Console.WriteLine($"Molecule deleted successfully");
             }
             else
             {
