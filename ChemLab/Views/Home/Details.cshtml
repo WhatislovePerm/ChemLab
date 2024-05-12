@@ -1,5 +1,5 @@
 ﻿@model ChemLab.Data.Entity.LabPractice
-
+<head>
 @{
     ViewData["Title"] = "Details";
 }
@@ -8,38 +8,61 @@
 <hr />
 
 <link rel="stylesheet" type="text/css" href="~/lib/libs/dist/themes/default/kekule.css" />
-
-
+</head>
+<body>
 <style>
 
     /* Общие стили */
-    #composer {
-        height: 450px;
-        width: 600px;
-        float: left;
+    #stage {
+        display: flex;
+        flex-wrap: nowrap; /* Элементы не переносятся на новую строку */
+        width: 100%;
     }
 
-    .FloatClearer {
-        clear: both;
+    #composer {
+        height: 450px;
+        min-height: 400px;
+        width: 50%; /* Химический редактор занимает 50% ширины */
+        min-width: 40%;
+    }
+
+    #quill-editor-wrapper {
+        width: 50%; /* Явно задаем ширину 50% */
+        min-width: 15%;
+        min-height: 400px; /* Минимальная высота равна высоте химического редактора */
+        display: flex;
+        margin-left: 10px;
+        flex-direction: column; /* Организация в колонку для панели инструментов и содержимого */
+    }
+
+    #editor-container {
+        overflow-y: auto; /* Управление прокруткой внутри редактора */
+        max-height: none; /* Вычитаем высоту панели инструментов из общей высоты */
+    }
+
+    #composer,
+    #quill-editor-wrapper {
+        flex-grow: 1;
     }
 
     .table-container {
         display: flex;
         flex-direction: row;
-        overflow-x: auto;
+        overflow-x: auto; /* Поддерживаем функциональность горизонтальной прокрутки */
+        transform: scale(0.8); /* Уменьшаем масштаб содержимого до 80% */
+        transform-origin: top left; /* Устанавливаем начало трансформации в левый верхний угол */
+        width: calc(100% / 0.8); /* Корректируем ширину контейнера, чтобы компенсировать изменение масштаба */
     }
 
     #reactantTable,
     #productTable {
-        margin-right: 20px;
-        width: auto;
+        margin-right: 20px; /* Поддерживаем отступ между таблицами */
+        width: auto; /* Поддерживаем автоматическую ширину таблиц */
     }
 
-    /* Стили для таблиц */
     table {
-        width: 100%;
+        width: 100%; /* Каждая таблица занимает 100% ширины своего контейнера */
         border-collapse: collapse;
-        border-spacing: 0;
     }
 
     th, td {
@@ -47,6 +70,8 @@
         text-align: left;
         border-bottom: 1px solid #ddd;
     }
+
+
 
     th {
         background-color: #f8f9fa;
@@ -92,15 +117,15 @@
         text-align: center;
     }
 
-        .modal-content button {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+    .modal-content button {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
 
     /* Стили для текстовых полей и кнопок */
     input[type="text"],
@@ -146,17 +171,25 @@
         display: inline-block;
     }
 
+    #infoImage {
+        display: none;
+    }
+
+
+    textarea {
+        resize: none;
+    }
+
 
 
 </style>
+
 <button id="toggleButtonSave">Сохранить молекулу</button>
 <button id="toggleRowsButton" class="hidden">Скрыть/показать молекулы</button>
 
 <div id="contentToToggle" class="hidden">
     <div>
-        <button id="btnSetAnchor" data-widget="Kekule.Widget.Button" data-text="Set Anchor(s)">Set Anchor(s)</button>
-        <p id="setAnchorError" class="error-message">Произошла ошибка при установке якоря</p>
-        <select id="selStructType" data-widget="Kekule.Widget.SelectBox"></select>
+        
         <label>
             Name:
             <input id="editName" type="text" data-widget="Kekule.Widget.TextBox" placeholder="Имя">
@@ -178,16 +211,22 @@
     </div>
 
     <div>
+            <button id="btnSetAnchor" data-widget="Kekule.Widget.Button" data-text="Set Anchor(s)">Set Anchor(s)</button>
+            <p id="setAnchorError" class="error-message">Произошла ошибка при установке якоря</p>
         <button id="btnAddRepoItem" data-widget="Kekule.Widget.Button" data-text="Add item and update">Add item and update</button>
     </div>
 
 </div>
 
 
-<div id="stage">
-    <div id="composer"></div>
-    <div class="FloatClearer"></div>
-</div>
+    <div id="stage">
+        <div id="composer"></div>
+        <div id="quill-editor-wrapper">
+            <div id="editor-container"></div>
+        </div>
+    </div>
+
+
 
 
 <div class="table-container">
@@ -240,7 +279,8 @@
     </table>
 </div>
 
-<div id="editor-container"></div>
+    <div id="below-tables-container"></div>
+
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -255,7 +295,9 @@
 
 <img id="infoImage" src="~/info.png" alt="Информация" style="width: 20px; height: 20px;">
 
+
 <script>
+
 
     function showErrorUnderButton() {
         var setAnchorError = document.getElementById('setAnchorError');
@@ -401,8 +443,16 @@
       <rect x="7" y="17" width="2" height="2"/>
     </svg>`;
 
+    const positionToggleIcon = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
+            <path d="M7 9 L12 4 L17 9" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path d="M7 15 L12 20 L17 15" stroke="currentColor" stroke-width="2" fill="none"/>
+        </svg>`;
+
     const icons = Quill.import('ui/icons');
     icons['customCurrentDate'] = calendarIcon;
+    icons['togglePosition'] = positionToggleIcon;
+
 
     function insertCurrentDate() {
         var currentDate = new Date();
@@ -419,15 +469,41 @@
         ['link', 'image', 'video', 'formula', { 'customCurrentDate': 'Insert current date' }],
         [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }, { 'indent': '-1' }, { 'indent': '+1' }, { 'direction': 'rtl' }],
         [{ 'script': 'sub' }, { 'script': 'super' }],
-        [{ 'color': [] }, { 'background': [] }]
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'togglePosition': 'Toggle position' }]
     ];
+
+    function toggleEditorPosition() {
+        const editorWrapper = document.getElementById('quill-editor-wrapper');
+        const stageContainer = document.getElementById('stage');
+        const belowTablesContainer = document.getElementById('below-tables-container');
+        const composer = document.getElementById('composer');
+
+
+        if (editorWrapper.parentNode === stageContainer) {
+            belowTablesContainer.appendChild(editorWrapper);
+            editorWrapper.style.width = "100%";
+            editorWrapper.style.height = "400px";
+            editorWrapper.style.overflowY = "auto";
+
+            composer.style.flexGrow = "0";
+            composer.style.width = "100%";
+        } else {
+            stageContainer.appendChild(editorWrapper);
+            editorWrapper.style = "";
+
+            composer.style.width = "";
+
+        }
+    }
 
     const quill = new Quill('#editor-container', {
         modules: {
             toolbar: {
                 container: toolbarOptions,
                 handlers: {
-                    'customCurrentDate': insertCurrentDate
+                    'customCurrentDate': insertCurrentDate,
+                    'togglePosition': toggleEditorPosition
                 }
             }
         },
@@ -540,6 +616,7 @@
             infoButton.style.marginLeft = "5px";
 
             const clonedImage = document.getElementById("infoImage").cloneNode(true);
+            clonedImage.style.display = 'inline';
             infoButton.appendChild(clonedImage);
 
             infoButton.addEventListener("click", () => {
@@ -1086,7 +1163,7 @@
         }
 
         createOrUpdateColumn(fragment, flagNew) {
-            // console.log("in createOrUpdateColumn");
+            console.log("in createOrUpdateColumn for", fragment.fragmentId);
             const table = fragment.flagReactant ? this.tableReactant : this.tableProduct;
             let rowOffset = TABLE_ROWS.UNIQUE;
 
@@ -1276,6 +1353,7 @@
 
             if (!targetComposer) {
                 targetComposer = new Kekule.Editor.Composer(document.getElementById('composer'));
+                targetComposer.setResizable(true);
             }
             
             this.composer = targetComposer;
@@ -1707,6 +1785,7 @@
                 }
             }
             targetComposer = new Kekule.Editor.Composer(document.getElementById('composer'));
+            targetComposer.setResizable(true);
             if (this.firstRun === false && repItemData && repItemData.structData && repItemData.dataFormat) {
                 targetComposer.load(repItemData.structData, repItemData.dataFormat);
             }
@@ -1789,6 +1868,7 @@
                         }
                     }
                     targetComposer = new Kekule.Editor.Composer(document.getElementById('composer'));
+                    targetComposer.setResizable(true);
 
                     await this.initialize();
                 }
@@ -1913,7 +1993,9 @@
 
 
         getRepObject() {
-            var structClass = Kekule.Widget.getWidgetById('selStructType').getValue();
+            // var structClass = Kekule.Widget.getWidgetById('selStructType').getValue();
+            // console.log("structClass=", structClass);
+                var structClass = Kekule.SubGroup;
             var result = new structClass();
             var composer = Kekule.Widget.getWidgetById('composer');
             var srcObj = composer.exportObjs(Kekule.StructureFragment)[0];
@@ -2066,17 +2148,9 @@
 
     var targetComposer;
 
-    function fillStructTypes() {  //  TO DO
-        var selBox = Kekule.Widget.getWidgetById('selStructType');
-        selBox.setItems([
-            { 'text': 'Kekule.SubGroup', 'value': Kekule.SubGroup }
-            // ,
-            // {'text': 'Kekule.Molecule', 'value': Kekule.Molecule}
-        ]);
-    }
+  
 
     async function init() {
-        fillStructTypes();
         const myComposer = new Composer();
 
         Kekule.Widget.getWidgetById('btnSetAnchor').on('execute', function (e) {
@@ -2090,9 +2164,43 @@
 
 
     Kekule.X.domReady(init);
+        
+    document.addEventListener('DOMContentLoaded', function () {
+        const composerElement = document.getElementById('composer');
+        const editorContainer = document.getElementById('editor-container');
+        const toolbar = document.querySelector('.ql-toolbar');
+
+        const adjustEditorHeight = () => {
+        const editorWrapper = document.getElementById('quill-editor-wrapper');
+        const stageContainer = document.getElementById('stage');
+        if (editorWrapper.parentNode === stageContainer) {
+
+                const composerHeight = composerElement.offsetHeight;
+                const toolbarHeight = toolbar ? toolbar.offsetHeight : 0; // Получаем высоту панели инструментов, если она существует
+                // Устанавливаем высоту editor-container, вычитая высоту панели инструментов
+                editorContainer.style.height = `${composerHeight - toolbarHeight}px`;
+        }
+        };
+
+        // Создаем наблюдатель за изменением размера
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                if (entry.target === composerElement) {
+                    adjustEditorHeight();
+                }
+            }
+        });
+
+        // Начинаем наблюдение за элементом composer
+        resizeObserver.observe(composerElement);
+
+        // Установка начальной высоты
+        adjustEditorHeight();
+    });
 
 </script>
 
 <div>
     <a asp-action="Index">Назад на главную</a>
 </div>
+</body>
