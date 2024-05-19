@@ -180,7 +180,11 @@
         resize: none;
     }
 
-
+    input[type="radio"].action {
+        transform: scale(1.2);
+        position: relative;
+        right: -20px;
+    }
 
 </style>
 
@@ -357,7 +361,6 @@
     var ctrlPressed = false;
 
     document.addEventListener('keydown', function (event) {
-        // console.log("listen", event);
         if (event.key === 'Control') {
             ctrlPressed = true;
         } else if (ctrlPressed && event.key === '1') {
@@ -574,7 +577,7 @@
             this.reactantFragments = new Map();
             this.productFragments = new Map();
             this.activeFragment = null;
-            this.composer = composer;''
+            this.composer = composer;
         }
         tableReactant = document.getElementById("reactantTable");
         tableProduct = document.getElementById("productTable");
@@ -730,7 +733,7 @@
             let nCell;
             if (flagNew) {
                 nCell = nRow.insertCell(nRow.cells.length);
-                if (this.activeFragment) {  //  проверить как будет работать с переносимыми столбцами TO DO
+                if (this.checkEmpty(fragment.n)) {
                     var nValueBase = this.activeFragment.n;
                     var eqvValueBase = this.activeFragment.equivalent;
                     fragment.n = (nValueBase / eqvValueBase);
@@ -804,7 +807,7 @@
             let mCell;
             if (flagNew) {
                 mCell = mRow.insertCell(mRow.cells.length);
-                if (this.activeFragment) {  //  проверить как будет работать с переносимыми столбцами TO DO
+                if (this.activeFragment) {
                     fragment.m = (fragment.n * fragment.molarMass / 1000);
                     mInput.value = this.formatNumber(fragment.m * this.multiplierUnit(fragment, true));
                 } else if (fragment.m !== "" || fragment.m !== 0.00) {
@@ -825,7 +828,6 @@
                     } else {
                         fragment.m = mInput.value / this.multiplierUnit(fragment, true);
                         mInput.value = this.formatNumber(mInput.value);
-                        // console.log("ProcessingOtherFieldsForM");
                         this.ProcessingOtherFieldsForM(e.target.value, fragment);
                     }
                 } else {
@@ -856,14 +858,8 @@
             mUnitSelect.addEventListener('change', (e) => {
                 if (this.handleMUnitChange(e, mInput, data, true)) {
                     mInput.value = this.formatNumber(data.m * 1000);
-                    // console.log("m = ", data.m);
-                    // console.log("mInput.value = ", this.formatNumber(data.m * 1000));
-                    // console.log("mInput.value = ", mInput.value);
                 } else {
                     mInput.value = this.formatNumber(data.m);
-                    // console.log("m = ", data.m);
-                    // console.log("mInput.value = ", this.formatNumber(data.m));
-                    // console.log("mInput.value = ", mInput.value);
                 }
                 this.createOrUpdateColumn(data, false);
                 this.composer.sendDataToServerAsync();
@@ -957,7 +953,6 @@
             const actionRow = table.rows[TABLE_ROWS.ACTION];
             const actionCell = actionRow.insertCell(actionRow.cells.length);
 
-
             const radioInput = document.createElement("input");
             radioInput.type = 'radio';
             radioInput.name = 'action';
@@ -968,47 +963,45 @@
             }
 
             radioInput.addEventListener('change', () => {
-                // console.log("action change:", fragment.fragmentId);
                 this.activeFragment.action = false;
                 fragment.action = true;
                 this.activeFragment = fragment;
                 this.createOrUpdateColumn(fragment, false);
-                // resetAllActionsExcept(fragment.fragmentId);
                 if (fragment.n !== "" && fragment.m !== "") {
                     this.updateEmptyFields(fragment, true);
                     this.updateEmptyFields(fragment, false);
                 }
 
-                // this.reactantFragments.forEach((value, key) => {
-                    // this.createOrUpdateColumn(value, false);
-                // });
-
                 this.productFragments.forEach((value, key) => {
                     this.createOrUpdateColumn(value, false);
                 });
-                console.log("sendDataToServerAsync in radioInput on change");
+                // console.log("sendDataToServerAsync in radioInput on change");
                 this.composer.sendDataToServerAsync();
 
             });
 
             actionCell.appendChild(radioInput);
+
+            actionCell.addEventListener('click', () => {  //  делаем нажатие на клетку с радио-кнопокой переключателем
+                if (!radioInput.checked) {
+                    radioInput.checked = true;
+                    radioInput.dispatchEvent(new Event('change')); 
+                }
+            });
+
         }
 
         updateEmptyFields(activeFragment, flagReactant) {
             const data = flagReactant ? this.reactantFragments : this.productFragments;
             for (var [key, element] of data.entries()) {
                 if (element.action === false) {
-                    // console.log("in upempty, element.n=", element.n, "element.m=", element.m);
-                    // if (element.n === "" && element.m === "") {
                     if (this.checkEmpty(element.n) && this.checkEmpty(element.m)) {
                         element.n = activeFragment.n * element.equivalent / activeFragment.equivalent;
                         element.m = (element.n * element.molarMass / 1000);
                         this.createOrUpdateColumn(element, false);
-                    // } else if (element.n === "") {
                     } else if (this.checkEmpty(element.n)) {
                         element.n = (element.m / element.molarMass * 1000);
                         this.createOrUpdateColumn(element, false);
-                    // } else if (element.m === "") {
                     } else if (this.checkEmpty(element.m)) {
                         element.m = (element.n * element.molarMass / 1000);
                         this.createOrUpdateColumn(element, false);
@@ -1057,28 +1050,23 @@
                         this.composer.sendDataToServerAsync();
                     }
                 });
-            } else {
-                // Если фрагмент не является реагентом, вводится выход реакции
+            } else {  // Если фрагмент не является реагентом, выводится выход реакции
+                
                 const result = parseFloat((fragment.m / (this.activeFragment.n / 1000.0 * fragment.molarMass)) * 100.0);
-                // мб this.activeFragment.n делить еще на эквивалент TO DO
                 if (!isNaN(result) && isFinite(result)) {
                     eqvInput.value = result.toFixed(2);
                 } else {
                     eqvInput.value = '';
                 }
 
-                if (fragment.action) {  //  TO DO
-                    console.log("else if fragment.action");
-                    eqvInput.disabled = false; // Делаем поле только для вывода информации
+                if (fragment.action) {  //  или если продукт активный то эквивалент который можно изменять
+                    eqvInput.disabled = false;
                 } else {
-                    console.log("else if fragment.action else");
                     eqvInput.disabled = true;
                 }
             }
-
             eqvCell.innerHTML = '';
             eqvCell.appendChild(eqvInput);
-
         }
 
         ProcessingOtherFieldsForEqv(oldValue, fragmentInfo) {
@@ -1163,12 +1151,10 @@
         }
 
         createOrUpdateColumn(fragment, flagNew) {
-            console.log("in createOrUpdateColumn for", fragment.fragmentId);
             const table = fragment.flagReactant ? this.tableReactant : this.tableProduct;
             let rowOffset = TABLE_ROWS.UNIQUE;
 
             if (flagNew) {
-                // console.log("CREATE", fragment.fragmentId);
                 this.formulaCell(fragment, table, fragment.formula, flagNew);
                 this.mwCell(table, fragment.molarMass, flagNew);
                 this.nCell(table, fragment, flagNew);
@@ -1186,8 +1172,6 @@
                     const cellFragmentId = cell.innerHTML;
 
                     if (cellFragmentId === fragment.fragmentId) {
-                        // console.log("UPDATE", fragment.fragmentId);
-                        // console.log("cellFragmentId=", cellFragmentId, "fragment.fragmentId=", fragment.fragmentId);
                         this.formulaCell(fragment, table, fragment.formula, flagNew, i);
                         this.mwCell(table, fragment.molarMass, flagNew, i);
                         this.nCell(table, fragment, flagNew, i);
@@ -1379,7 +1363,6 @@
                     url: '/chemeditor/get_file/' + id,
                     contentType: 'application/json; charset=utf-8'
                 });
-                //console.log(data);
                 this.displayData(data);
             } catch (error) {
                 console.error('Произошла ошибка при получении данных химического редактора:', error);
@@ -1388,7 +1371,6 @@
 
         displayData(data) {
             if (data.chemDocumentData !== "") {
-                //console.log("chemDocumentData:", data.chemDocumentData);
                 let composer = this.composer;
                 let chemData = Kekule.IO.loadFormatData(data.chemDocumentData, 'Kekule-JSON');
                 composer.setChemObj(chemData);
@@ -1424,19 +1406,21 @@
                         this.table.productFragments.set(product.fragmentId, fragment);
                         if (fragment.action === true) {
                             this.table.activeFragment = fragment;
+                            // console.log("this.table.activeFragment = fragment;", fragment.fragmentId);
                         }
+                        // fragment.table.createOrUpdateColumn(fragment, true);
+                    });
+
+                    this.table.productFragments.forEach((fragment, fragmentId) => {
                         fragment.table.createOrUpdateColumn(fragment, true);
                     });
                 }
 
                 this.eventHandler();
-
-                this.table.printFragmentIds();
             }
         }
 
         async sendDataToServerAsync() {
-            // console.log("sendDataToServerAsync");
             try {
                 let chemDocumentData = this.generateChemDocumentData();
 
@@ -1518,7 +1502,6 @@
                 let part = ChemDocument[i];
                 data += Kekule.IO.saveFormatData(part, 'Kekule-JSON');
             }
-            //console.log(data);
             return data;
         }
 
@@ -2133,7 +2116,6 @@
                             image: item.imageData
                         };
                     });
-                    // console.log(molecules);
                     return molecules;
 
                 } else {
