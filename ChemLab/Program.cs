@@ -26,6 +26,8 @@ builder.Services.AddTransient<IAccountRepository, AccountRepository>();
 builder.Services.AddTransient<IAccountService, AccountService>();
 builder.Services.AddTransient<ILabPracticeRepository, LabPracticeRepository>();
 builder.Services.AddTransient<ILabPracticeService, LabPracticeService>();
+builder.Services.AddTransient<ISubGroupMoleculeRepository, SubGroupMoleculeRepository>();
+
 
 builder.Services.AddAuthentication(options => options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme)
     .AddGoogle(googleOptions => {
@@ -77,9 +79,39 @@ app.MapControllerRoute(
     defaults: new { controller = "ChemEditor", action = "SaveChemData" });
 
 app.MapControllerRoute(
+    name: "uploadMolecule",
+    pattern: "/chemeditor/upload_molecule",
+    defaults: new { controller = "ChemEditor", action = "UploadMolecule" });
+
+app.MapControllerRoute(
+    name: "uploadMolecule",
+    pattern: "/chemeditor/DeleteMolecule/{name}",
+    defaults: new { controller = "ChemEditor", action = "DeleteMolecule" });
+
+app.MapControllerRoute(
+    name: "uploadMolecule",
+    pattern: "/chemeditor/UploadImage/{name}",
+    defaults: new { controller = "ChemEditor", action = "UploadImage" });
+
+app.MapControllerRoute(
+    name: "GetAllMolecules",
+    pattern: "/chemeditor/get_molecules",
+    defaults: new { controller = "ChemEditor", action = "GetAllMolecules" });
+
+app.MapControllerRoute(
     name: "pubchem_get_cas",
     pattern: "api/pubchem/get_cas/{smiles}",
     defaults: new { controller = "PubChem", action = "GetChemInfo" });
+
+app.MapControllerRoute(
+    name: "chemeditor",
+    pattern: "chemeditor/save_text/{id}",
+    defaults: new { controller = "ChemEditor", action = "SaveText" });
+
+app.MapControllerRoute(
+    name: "chemeditorget",
+    pattern: "chemeditor/get_text/{id}",
+    defaults: new { controller = "ChemEditor", action = "GetText" });
 
 app.MapControllerRoute(
     name: "default",

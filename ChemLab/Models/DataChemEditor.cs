@@ -1,32 +1,50 @@
 ﻿namespace ChemLab.Models
 {
-    public class DataContainer
+    public class ChemDataViewModel
     {
         public string ChemDocumentData { get; set; }
-        public string ReactantData { get; set; }
-        public string ProductData { get; set; }
+        public IEnumerable<ReactantDataViewModel> ReactantData { get; set; }
+        public IEnumerable<ProductDataViewModel> ProductData { get; set; }
         public double XCoordinateArrow { get; set; }
     }
 
-    public class ReactantData
+    public class ReactantDataViewModel
     {
-        public string FragmentId { get; set; }
-        public string Formula { get; set; }
-        public double MolarMass { get; set; }
-        public string M { get; set; }
-        public string N { get; set; }
-        public double Equivalent { get; set; }
-        public int Action { get; set; }
+        public string fragmentId { get; set; }
+        public string formula { get; set; }
+        public double molarMass { get; set; }
+        public double m { get; set; }
+        public string mUnit { get; set; }
+        public double n { get; set; }
+        public string nUnit { get; set; }
+        public double equivalent { get; set; }
+        public bool action { get; set; }
     }
 
-    public class ProductData
+    public class ProductDataViewModel
     {
-        public string FragmentId { get; set; }
-        public string Formula { get; set; }
-        public double MolarMass { get; set; }
-        public string M { get; set; }
-        public string N { get; set; }
-        public double Equivalent { get; set; }
-        public int Action { get; set; }
+        public string fragmentId { get; set; }
+        public string formula { get; set; }
+        public double molarMass { get; set; }
+        public double m { get; set; }
+        public string mUnit { get; set; }
+        public double n { get; set; }
+        public string nUnit { get; set; }
+        public double equivalent { get; set; }
+        public bool action { get; set; }
+    }
+
+    public class MoleculeViewModel
+    {
+        public string Name { get; set; }
+        public string Abbreviation { get; set; }
+        public string FormulaText { get; set; }
+        public string InputTexts { get; set; }
+        public string StructData { get; set; }
+    }
+
+    public class ContentModel
+    {
+        public string Content { get; set; }
     }
 }

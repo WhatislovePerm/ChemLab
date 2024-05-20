@@ -22,6 +22,13 @@ public class PubChemController : ControllerBase
         {
             var httpClient = _httpClientFactory.CreateClient();
 
+            var propertiesUrl = $"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{smiles}/property/MolecularWeight,ExactMass/JSON";
+            var propertiesResponse = await httpClient.GetStringAsync(propertiesUrl);
+            var propertiesData = JObject.Parse(propertiesResponse);
+
+            var molecularWeight = propertiesData["PropertyTable"]["Properties"][0]["MolecularWeight"].ToString();
+            var exactMass = propertiesData["PropertyTable"]["Properties"][0]["ExactMass"].ToString();
+
             var synonymsAndCasUrl = $"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{smiles}/synonyms/JSON";
             var synonymsAndCasResponse = await httpClient.GetStringAsync(synonymsAndCasUrl);
             var synonymsAndCasData = JObject.Parse(synonymsAndCasResponse);
@@ -35,7 +42,8 @@ public class PubChemController : ControllerBase
                 var imageRequestUrl = $"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{smiles}/PNG";
                 var imageResponse = await httpClient.GetByteArrayAsync(imageRequestUrl);
 
-                return Ok(new { success = true, casNumber, firstSynonym, image = Convert.ToBase64String(imageResponse) });
+                //return Ok(new { success = true, casNumber, firstSynonym, image = Convert.ToBase64String(imageResponse) });
+                return Ok(new { success = true, casNumber, firstSynonym, molecularWeight, exactMass, image = Convert.ToBase64String(imageResponse) });
             }
             else
             {

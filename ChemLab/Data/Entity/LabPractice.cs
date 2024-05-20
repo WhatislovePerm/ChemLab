@@ -25,6 +25,8 @@ namespace ChemLab.Data.Entity
 
         public double XCoordinateArrow { get; set; }
 
+        public string TextContent { get; set; }
+
         public LabPractice()
         {
 
@@ -37,6 +39,7 @@ namespace ChemLab.Data.Entity
             ChemDocumentData = "";
             ReactantData = "";
             ProductData = "";
+            TextContent = "";
         }
 
 
