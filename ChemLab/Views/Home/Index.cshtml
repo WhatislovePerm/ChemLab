@@ -29,10 +29,10 @@
                                 <div class="description">@labPractice.Description</div>
                             </td>
                             <td>@labPractice.DateOfCreate.ToString("yyyy-MM-dd HH:mm")</td>
-                            <td>
-                                <a asp-action="Details" asp-route-id="@labPractice.Id">Детали</a> |
-                                <a asp-action="Edit" asp-route-id="@labPractice.Id">Редактировать</a> |
-                                <button type="button" class="btn btn-link" onclick="confirmDelete('@labPractice.Id')">Удалить</button>
+                            <td class="actions-cell">
+                                <a asp-action="Details" asp-route-id="@labPractice.Id" class="btn-action">Детали</a>
+                                <a asp-action="Edit" asp-route-id="@labPractice.Id" class="btn-action">Редактировать</a>
+                                <button type="button" class="btn-action btn-delete" onclick="confirmDelete('@labPractice.Id')">Удалить</button>
                             </td>
                         </tr>
                     }
@@ -113,18 +113,18 @@
         }
 
         .swal2-confirm {
-            background: linear-gradient(to bottom, #0056b3, #003d80) !important; /* Градиент для кнопки подтверждения */
+            background: linear-gradient(to bottom, #007bff, #0056b3) !important; /* Градиент для кнопки подтверждения */
             color: white !important; /* Цвет текста кнопки подтверждения */
             border-color: #0056b3 !important; /* Цвет границы кнопки подтверждения */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Объемная тень */
         }
 
         .swal2-confirm:focus {
-            box-shadow: none !important; /* Убираем фиолетовую окантовку при фокусе */
+            box-shadow: none !important;
         }
 
         .swal2-confirm:hover {
-            background: linear-gradient(to bottom, #0062cc, #004080) !important; /* Цвет фона при наведении для кнопки подтверждения */
+                background: linear-gradient(to bottom, #0056b3, #004080) !important; /* Цвет фона при наведении для кнопки подтверждения */
         }
 
         .swal2-cancel-custom {
@@ -182,10 +182,10 @@
             max-height: 4.5em; /* Высота, соответствующая 3 строкам */
         }
 
-            .description.more {
-                max-height: none; /* Убираем ограничение высоты */
-                -webkit-line-clamp: unset;
-            }
+        .description.more {
+            max-height: none;
+            -webkit-line-clamp: unset;
+        }
 
         .show-more, .show-less {
             color: #0056b3;
@@ -195,6 +195,31 @@
 
         .table tbody tr:hover {
             background-color: #f2f2f2; /* Цвет фона при наведении */
+        }
+
+        .btn-action {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            border: 1px solid transparent;
+            border-radius: 0.25rem;
+            text-decoration: none;
+            color: #007bff;
+            background-color: transparent;
+        }
+
+        .btn-action:hover {
+            text-decoration: underline;
+            background-color: #e9ecef;
+        }
+
+        .btn-delete {
+            color: #dc3545;
+        }
+
+        .btn-delete:hover {
+            background-color: #f8d7da;
         }
 
     </style>
