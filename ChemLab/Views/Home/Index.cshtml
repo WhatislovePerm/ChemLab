@@ -9,15 +9,14 @@
         <a class="col-sm-1 h4 offset-10" asp-controller="Home" asp-action="Create">Новый опыт</a>
     </div>
     <hr />
-
     <div class="row">
         <div class="col-md-12">
             <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">Название</th>
-                        <th scope="col">Дата создания</th>
                         <th scope="col">Описание</th>
+                        <th scope="col">Дата создания</th>
                         <th scope="col">&nbsp;</th>
                     </tr>
                 </thead>
@@ -26,21 +25,182 @@
                     {
                         <tr>
                             <td>@labPractice.Name</td>
-                            <td>@labPractice.DateOfCreate</td>
-                            <td>@labPractice.Description</td>
+                            <td>
+                                <div class="description">@labPractice.Description</div>
+                            </td>
+                            <td>@labPractice.DateOfCreate.ToString("yyyy-MM-dd HH:mm")</td>
                             <td>
                                 <a asp-action="Details" asp-route-id="@labPractice.Id">Детали</a> |
                                 <a asp-action="Edit" asp-route-id="@labPractice.Id">Редактировать</a> |
-                                <form method="post" asp-controller="Home" asp-action="Delete" asp-route-id="@labPractice.Id">
-                                    <button type="submit" class="btn btn-link">Удалить</button>
-                                </form>
+                                <button type="button" class="btn btn-link" onclick="confirmDelete('@labPractice.Id')">Удалить</button>
                             </td>
                         </tr>
                     }
                 </tbody>
-
-
             </table>
         </div>
     </div>
+}
+@section Scripts {
+    <script type="text/javascript">
+        function confirmDelete(labPracticeId) {
+            Swal.fire({
+                title: 'Вы уверены?',
+                showCancelButton: true,
+                confirmButtonText: 'Да, удалить!',
+                cancelButtonText: 'Отмена',
+                customClass: {
+                    confirmButton: 'swal2-confirm',
+                    cancelButton: 'swal2-cancel-custom'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-form-' + labPracticeId).submit();
+                }
+            });
+        }
+
+        function toggleDescription(element) {
+            var description = element.previousElementSibling;
+            description.classList.toggle('more');
+            if (description.classList.contains('more')) {
+                element.textContent = 'Показать меньше';
+            } else {
+                element.textContent = 'Показать больше';
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var descriptions = document.querySelectorAll('.description');
+            descriptions.forEach(function (desc) {
+                if (desc.scrollHeight > desc.clientHeight) {
+                    var showMore = document.createElement('div');
+                    showMore.className = 'show-more';
+                    showMore.textContent = 'Показать больше';
+                    showMore.onclick = function () { toggleDescription(showMore); };
+                    desc.after(showMore);
+                }
+            });
+        });
+    </script>
+
+    <style>
+        /* Стили для SweetAlert2 */
+        .swal2-popup {
+            background-color: #f8f9fa; /* Цвет фона, соответствующий стилю сайта */
+            border: 1px solid #ddd; /* Граница, соответствующая стилю сайта */
+            border-radius: 12px; /* Скругленные углы */
+        }
+
+        .swal2-title {
+            color: #333; /* Цвет заголовка */
+        }
+
+        .swal2-content {
+            color: #666; /* Цвет содержания */
+        }
+
+        .swal2-confirm, .swal2-cancel-custom {
+            border-radius: 4px; /* Скругленные углы */
+            padding: 0.375rem 0.75rem; /* Отступы */
+            font-size: 1rem; /* Размер шрифта */
+            line-height: 1.5; /* Высота строки для выравнивания текста */
+            border: 1px solid; /* Граница */
+            display: inline-block; /* Отображение */
+            text-align: center; /* Выравнивание текста */
+            cursor: pointer; /* Курсор */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Объемная тень */
+        }
+
+        .swal2-confirm {
+            background: linear-gradient(to bottom, #0056b3, #003d80) !important; /* Градиент для кнопки подтверждения */
+            color: white !important; /* Цвет текста кнопки подтверждения */
+            border-color: #0056b3 !important; /* Цвет границы кнопки подтверждения */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Объемная тень */
+        }
+
+        .swal2-confirm:focus {
+            box-shadow: none !important; /* Убираем фиолетовую окантовку при фокусе */
+        }
+
+        .swal2-confirm:hover {
+            background: linear-gradient(to bottom, #0062cc, #004080) !important; /* Цвет фона при наведении для кнопки подтверждения */
+        }
+
+        .swal2-cancel-custom {
+            background: linear-gradient(to bottom, #ffffff, #e0e0e0) !important; /* Градиент для фона */
+            color: #000000 !important; /* Черный цвет текста для кнопки отмены */
+            border-color: #c0c0c0 !important; /* Граница для кнопки отмены */
+        }
+
+        .swal2-cancel-custom:hover {
+            background: linear-gradient(to bottom, #f0f0f0, #d0d0d0) !important; /* Цвет фона при наведении для кнопки отмены */
+        }
+
+        .table {
+            width: 100%;
+            table-layout: fixed; /* Фиксированная ширина таблицы */
+        }
+
+        .table th, .table td {
+            padding: 8px;
+            text-align: left;
+            vertical-align: top; /* Выравнивание по верху */
+        }
+
+        .table th:nth-child(1),
+        .table td:nth-child(1) {
+            width: 20%; /* Ширина столбца для названия */
+        }
+
+        .table th:nth-child(3),
+        .table td:nth-child(3) {
+            width: 15%; /* Ширина столбца для даты */
+            white-space: nowrap; /* Запрет переноса текста */
+        }
+
+        .table th:nth-child(4),
+        .table td:nth-child(4) {
+            width: 25%; /* Ширина столбца для кнопок */
+            white-space: nowrap; /* Запрет переноса текста */
+            text-align: right; /* Выравнивание по правому краю */
+        }
+
+        .table th:nth-child(2),
+        .table td:nth-child(2) {
+            width: 40%; /* Ширина столбца для описания */
+            word-wrap: break-word; /* Перенос длинных слов */
+            word-break: break-all; /* Перенос длинных слов */
+        }
+
+        .description {
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* Показываем только 3 строки */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            position: relative;
+            max-height: 4.5em; /* Высота, соответствующая 3 строкам */
+        }
+
+            .description.more {
+                max-height: none; /* Убираем ограничение высоты */
+                -webkit-line-clamp: unset;
+            }
+
+        .show-more, .show-less {
+            color: #0056b3;
+            cursor: pointer;
+            text-align: right;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f2f2f2; /* Цвет фона при наведении */
+        }
+
+    </style>
+}
+@foreach (var labPractice in Model)
+{
+    <form id="delete-form-@labPractice.Id" method="post" asp-controller="Home" asp-action="Delete" asp-route-id="@labPractice.Id" style="display:none;">
+    </form>
 }
