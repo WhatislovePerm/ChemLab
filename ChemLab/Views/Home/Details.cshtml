@@ -1341,7 +1341,8 @@
             }
             
             this.composer = targetComposer;
-            this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
+
+            this.setupComposerInterface();
 
             this.removeAllColumnsExceptFirst();
             await this.getfile();
@@ -1353,6 +1354,111 @@
             const newDocumentButton = document.querySelector('.K-Chem-NewDoc');
 
             newDocumentButton.addEventListener('click', this.removeAllColumnsExceptFirst.bind(this));
+        }
+
+        setupComposerInterface() {
+            var N = Kekule.ChemWidget.ComponentWidgetNames;
+            var C = Kekule.Editor.ObjModifier.Category;
+
+            this.composer.setCommonToolButtons([
+                N.newDoc,
+                N.loadData,
+                N.saveData,
+                N.undo,
+                N.redo,
+                N.copy,
+                N.cut,
+                N.paste,
+                N.zoomIn,
+                N.zoomOut,
+                // N.config,
+                // N.objInspector
+            ]);
+
+            this.composer.setChemToolButtons([
+                {
+                    "name": N.manipulate,
+                    "attached": [
+                        N.manipulateMarquee,
+                        N.manipulateLasso,
+                        N.manipulateBrush,
+                        N.manipulateAncestor,
+                        N.dragScroll,
+                        N.toggleSelect
+                    ]
+                },
+                N.erase,
+                {
+                    "name": N.molBond,
+                    "attached": [
+                        N.molBondSingle,
+                        N.molBondDouble,
+                        N.molBondTriple,
+                        N.molBondWedgeUp,
+                        N.molBondWedgeDown,
+                        N.molChain,
+                        N.molRepFischer1,
+                        N.molRepSawhorseStaggered,
+                        N.molRepSawhorseEclipsed
+                    ]
+                },
+                {
+                    "name": N.molAtomAndFormula,
+                    "attached": [
+                        N.molAtom,
+                        N.molFormula
+                    ]
+                },
+                {
+                    "name": N.molRing,
+                    "attached": [
+                        N.molRing3,
+                        N.molRing4,
+                        N.molRing5,
+                        N.molRing6,
+                        N.molFlexRing,
+                        N.molRingAr6,
+                        N.molRepCyclopentaneHaworth1,
+                        N.molRepCyclohexaneHaworth1,
+                        N.molRepCyclohexaneChair1,
+                        N.molRepCyclohexaneChair2
+                    ]
+                },
+                {
+                    "name": N.molCharge,
+                    "attached": [
+                        N.molChargeClear,
+                        N.molChargePositive,
+                        N.molChargeNegative,
+                        N.molRadicalSinglet,
+                        N.molRadicalTriplet,
+                        N.molRadicalDoublet,
+                        N.molElectronLonePair
+                    ]
+                },
+                {
+                    "name": N.glyph,
+                    "attached": [
+                        N.glyphReactionArrowNormal,
+                        N.glyphReactionArrowReversible,
+                        N.glyphReactionArrowResonance,
+                        N.glyphReactionArrowRetrosynthesis,
+                        N.glyphRepSegment,
+                        N.glyphElectronPushingArrowDouble,
+                        N.glyphElectronPushingArrowSingle,
+                        N.glyphRepHeatSymbol,
+                        N.glyphRepAddSymbol
+                    ]
+                },
+                {
+                    "name": N.textImage,
+                    "attached": [
+                        N.textBlock
+                    ]
+                }
+            ]);
+
+            this.composer.setAllowedObjModifierCategories([C.GENERAL, C.CHEM_STRUCTURE, C.GLYPH, C.STYLE, C.MISC]);
         }
 
         async getfile() {
@@ -1377,7 +1483,7 @@
                 //  null
                 if (data.XCoordinateArrow !== undefined && (!(Math.abs(data.XCoordinateArrow + 1.0) < 0.1))) {
                     this.xCoordinateArrow = data.xCoordinateArrow;
-                    this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
+                    //this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
                 }
 
                 // Очищаем текущие данные
@@ -1542,10 +1648,10 @@
 
                 if (currentXCoordinate !== storedXCoordinate || !storedXCoordinate) {
                     this.xCoordinateArrow = currentXCoordinate;
-                    this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
+                    //this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'textBlock']);
                 }
             } else if (!document.querySelector('.K-Chem-ArrowLineIaController')) {
-                this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
+                //this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
                 this.xCoordinateArrow = null;
             }
         }
@@ -1663,7 +1769,7 @@
 
         removeAllColumnsExceptFirst() {
             this.xCoordinateArrow = null;
-            this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
+            //this.composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula', 'ring', 'charge', 'glyph', 'textBlock']);
 
             var table = this.table.tableReactant;
             for (var i = table.rows[0].cells.length - 1; i > 0; i--) {
